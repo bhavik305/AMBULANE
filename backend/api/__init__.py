@@ -1,0 +1,1 @@
+"""API package for the Lane-Aware Intelligent Emergency Vehicle Alert System."""

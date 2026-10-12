@@ -1,0 +1,13 @@
+{
+  "name": "Ambulance GPS Transmitter",
+  "short_name": "Ambulance",
+  "description": "Temporary phone-based GPS transmitter for the Lane-Aware Emergency Vehicle Alert System (STEP 3).",
+  "start_url": "/frontend/ambulance/index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#1e3a8a",
+  "icons": [
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

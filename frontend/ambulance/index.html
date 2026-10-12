@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1e3a8a">
+
+    <title>Ambulance GPS — Lane-Aware Alert System</title>
+    <link rel="manifest" href="/frontend/ambulance/manifest.json">
+    <link rel="icon" type="image/svg+xml" href="/frontend/ambulance/favicon.svg">
+
+    <link rel="stylesheet" href="ambulance.css">
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <div class="header-title">
+                <h1>Emergency Vehicle Alert</h1>
+                <p class="subtitle">Ambulance GPS Transmitter (Phone)</p>
+            </div>
+            <div class="status-dot" id="statusDot" title="Connection status"></div>
+        </header>
+
+        <main class="main">
+            <section class="card">
+                <h2>Connection</h2>
+                <div class="row">
+                    <span class="label">Backend:</span>
+                    <span class="value" id="backendHost">—</span>
+                </div>
+                <div class="row">
+                    <span class="label">Status:</span>
+                    <span class="value" id="connStatus">DISCONNECTED</span>
+                </div>
+                <div class="row">
+                    <span class="label">Messages sent:</span>
+                    <span class="value" id="msgCount">0</span>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>GPS</h2>
+                <div class="row">
+                    <span class="label">GPS:</span>
+                    <span class="value" id="gpsStatus">WAITING</span>
+                </div>
+                <div class="row">
+                    <span class="label">Latitude:</span>
+                    <span class="value" id="latValue">—</span>
+                </div>
+                <div class="row">
+                    <span class="label">Longitude:</span>
+                    <span class="value" id="lngValue">—</span>
+                </div>
+                <div class="row">
+                    <span class="label">Accuracy:</span>
+                    <span class="value" id="accValue">— m</span>
+                </div>
+                <div class="row">
+                    <span class="label">Speed:</span>
+                    <span class="value" id="speedValue">— km/h</span>
+                </div>
+                <div class="row">
+                    <span class="label">Heading:</span>
+                    <span class="value" id="headingValue">—°</span>
+                </div>
+                <div class="row">
+                    <span class="label">Update interval:</span>
+                    <span class="value" id="intervalValue">1500 ms</span>
+                </div>
+            </section>
+
+            <section class="card emergency-card">
+                <h2>Emergency Mode</h2>
+                <div class="row">
+                    <span class="label">Emergency:</span>
+                    <span class="value" id="emergencyValue">OFF</span>
+                </div>
+                <button class="toggle-btn" id="emergencyToggle">EMERGENCY: OFF</button>
+                <p class="hint">When ON, the ambulance is flagged as an emergency vehicle.</p>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <button class="primary-btn" id="startBtn">START GPS</button>
+            <button class="secondary-btn" id="stopBtn" disabled>STOP</button>
+            <label class="interval-label">
+                Interval:
+                <input type="range" id="intervalSlider" min="500" max="5000" step="500" value="1500">
+                <span id="intervalLabel">1500 ms</span>
+            </label>
+        </footer>
+
+        <div class="toast" id="toast" hidden></div>
+    </div>
+
+    <script src="ambulance.js"></script>
+</body>
+</html>
