@@ -39,7 +39,7 @@ import logging
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 # ---------------------------------------------------------------------------
@@ -128,10 +128,31 @@ app.add_middleware(
 from api.ambulance import router as ambulance_router
 from api.vehicle import router as vehicle_router
 from api.camera import router as camera_router
+from api.junction import router as junction_router
+from api.device import router as device_router
+from api.demo import router as demo_router
 
 app.include_router(ambulance_router)
 app.include_router(vehicle_router)
 app.include_router(camera_router)
+app.include_router(junction_router)
+app.include_router(device_router)
+app.include_router(demo_router)
+
+# ---------------------------------------------------------------------------
+# Static Files & Frontend Web UI
+# ---------------------------------------------------------------------------
+import pathlib
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
+
+_frontend_dir = pathlib.Path(__file__).resolve().parent.parent / "frontend"
+if _frontend_dir.exists():
+    app.mount("/frontend", StaticFiles(directory=str(_frontend_dir), html=True), name="frontend")
+
+@app.get("/ambulance", include_in_schema=False)
+async def ambulance_ui_redirect():
+    return RedirectResponse(url="/frontend/ambulance/index.html")
 
 
 # ---------------------------------------------------------------------------
@@ -176,16 +197,27 @@ async def health():
     return {"status": "ok"}
 
 
+@app.get("/app", include_in_schema=False)
+async def app_ui_redirect():
+    return RedirectResponse(url="/frontend/index.html")
+
+
 @app.get("/", tags=["status"])
-async def root():
-    return {
-        "service": "Lane-Aware Intelligent Emergency Vehicle Alert System",
-        "step": "STEP 1 - Backend Foundation",
-        "endpoints": {
-            "ambulance_ws": "/ws/ambulance",
-            "vehicle_ws": "/ws/vehicle/{vehicle_id}",
-            "camera_frame": "/api/camera/frame/{vehicle_id}",
-            "status": "/status",
-            "health": "/health",
-        },
-    }
+async def root(request: Request):
+    accept = request.headers.get("accept", "").lower()
+    if "application/json" in accept and "text/html" not in accept:
+        return {
+            "service": "Lane-Aware Intelligent Emergency Vehicle Alert System",
+            "step": "STEPS 1-8",
+            "endpoints": {
+                "ambulance_ws": "/ws/ambulance",
+                "vehicle_ws": "/ws/vehicle/{vehicle_id}",
+                "camera_frame": "/api/camera/frame/{vehicle_id}",
+                "status": "/status",
+                "health": "/health",
+                "app": "/frontend/index.html",
+                "ambulance_ui": "/frontend/ambulance/index.html",
+            },
+        }
+
+    return RedirectResponse(url="/frontend/index.html")

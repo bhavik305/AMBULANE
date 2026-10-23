@@ -97,6 +97,13 @@ async def _handle_telemetry(websocket: WebSocket, raw: Any) -> None:
         }
     )
 
+    # Dispatch alerts and fleet updates
+    try:
+        from dispatch_service import dispatch_alerts_and_fleet
+        await dispatch_alerts_and_fleet()
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Error in dispatch_alerts_and_fleet: %s", exc, exc_info=True)
+
 
 @router.websocket("/ws/ambulance")
 async def ambulance_websocket(websocket: WebSocket) -> None:

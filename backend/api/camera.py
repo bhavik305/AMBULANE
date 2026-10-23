@@ -35,7 +35,7 @@ from __future__ import annotations
 import io
 import logging
 import time
-from typing import Optional
+from typing import Optional, Any, Union
 
 from fastapi import APIRouter, File, UploadFile, HTTPException, status
 from pydantic import BaseModel, Field
@@ -209,3 +209,123 @@ async def upload_frame(
         message=msg,
         result=result,
     )
+
+
+@router.get("/api/camera/status")
+async def get_camera_telemetry():
+    """Retrieve telemetry, connection state, and lane detection metrics."""
+    from camera_manager import get_camera_manager
+    mgr = get_camera_manager()
+    return mgr.get_status()
+
+
+class CameraSourceRequest(BaseModel):
+    source: Union[int, str] = Field(..., description="Camera source: 0, 1, or 'prerecorded'")
+    vehicle_id: Optional[str] = "V001"
+
+
+class CameraAccessRequest(BaseModel):
+    enabled: bool = Field(..., description="True to turn camera ON, False to turn camera OFF and release hardware")
+    source: Optional[Union[int, str]] = Field(default=None, description="Optional camera source: 0, 1, or 'prerecorded'")
+    vehicle_id: Optional[str] = "V001"
+
+
+@router.post("/api/camera/access")
+@router.post("/api/camera/power")
+async def toggle_camera_access(req: CameraAccessRequest):
+    """Explicitly turn camera access ON or OFF.
+    When OFF, immediately releases video capture handle and turns off physical camera LED."""
+    from camera_manager import get_camera_manager
+    mgr = get_camera_manager(vehicle_id=req.vehicle_id or "V001")
+    if req.source is not None:
+        mgr.set_source(req.source)
+
+    if req.enabled:
+        mgr.start()
+        msg = f"Camera access ENABLED on source '{mgr.camera_source}'"
+    else:
+        mgr.stop()
+        msg = "Camera access DISABLED. Hardware handle released."
+
+    return {
+        "status": "ok",
+        "camera_enabled": mgr.camera_enabled,
+        "is_connected": mgr.is_connected,
+        "source": str(mgr.camera_source),
+        "source_type": mgr.source_type,
+        "message": msg,
+    }
+
+
+class CameraConfigRequest(BaseModel):
+    capture_interval_s: Optional[float] = Field(default=None, ge=1.0, le=60.0, description="Interval in seconds between still photo captures (default 5.0s)")
+    diagnostic_retention: Optional[bool] = Field(default=None, description="Explicit flag to temporarily store annotated diagnostic snapshots")
+
+
+@router.post("/api/camera/capture")
+async def trigger_manual_capture():
+    """Trigger an immediate single still photo capture and ML analysis."""
+    from camera_manager import get_camera_manager
+    mgr = get_camera_manager()
+    result = mgr.capture_single_photo()
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Photo capture failed: {mgr.last_error or 'CAMERA_UNAVAILABLE'}",
+        )
+    return {
+        "status": "ok",
+        "message": "Still photo captured and processed",
+        "result": result,
+        "telemetry": mgr.get_status(),
+    }
+
+
+@router.post("/api/camera/config")
+async def update_camera_config(req: CameraConfigRequest):
+    """Configure capture interval or diagnostic retention."""
+    from camera_manager import get_camera_manager
+    mgr = get_camera_manager()
+    mgr.set_config(interval_s=req.capture_interval_s, diagnostic_retention=req.diagnostic_retention)
+    return {
+        "status": "ok",
+        "capture_interval_s": mgr.capture_interval_s,
+        "diagnostic_retention": mgr.diagnostic_retention,
+    }
+
+
+@router.post("/api/camera/source")
+async def set_camera_source(req: CameraSourceRequest):
+    """Switch camera source between physical USB camera and prerecorded test mode."""
+    from camera_manager import get_camera_manager
+    mgr = get_camera_manager(vehicle_id=req.vehicle_id or "V001")
+    mgr.set_source(req.source)
+    # Only start if camera access was already explicitly turned on by the user
+    if mgr.camera_enabled and not mgr._running:
+        mgr.start()
+    return {
+        "status": "ok",
+        "source": str(req.source),
+        "source_type": mgr.source_type,
+        "camera_enabled": mgr.camera_enabled,
+    }
+
+
+@router.get("/api/camera/preview")
+async def get_camera_preview():
+    """Return latest annotated camera frame as JPEG image for HUD display."""
+    from camera_manager import get_camera_manager
+    from fastapi.responses import Response
+    mgr = get_camera_manager()
+    if mgr.camera_enabled and mgr.latest_frame_jpeg is not None:
+        return Response(content=mgr.latest_frame_jpeg, media_type="image/jpeg")
+
+    # Generate placeholder frame when camera access is disabled
+    import cv2
+    import numpy as np
+    blank = np.zeros((240, 320, 3), dtype=np.uint8)
+    blank[:, :] = (20, 24, 33)  # Slate dark bg
+    cv2.putText(blank, "CAMERA ACCESS OFF", (35, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (100, 120, 160), 2)
+    cv2.putText(blank, "Click 'TURN ON' to activate", (45, 140), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (140, 150, 170), 1)
+    _, buf = cv2.imencode(".jpg", blank)
+    return Response(content=buf.tobytes(), media_type="image/jpeg")

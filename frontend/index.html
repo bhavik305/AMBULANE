@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#09090B">
+  <meta name="description" content="Lane-Aware Intelligent Emergency Vehicle Alert & Adaptive Traffic Signal Clearance System">
+  <title>Lane-Aware EVAS — Intelligent Emergency Vehicle Alert System</title>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Leaflet CSS for Dark Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+
+  <!-- App Stylesheet -->
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-title">EVAS</span>
+        <span class="brand-badge">HUD + ESP32</span>
+      </div>
+
+      <div class="header-actions">
+        <div class="pill-v2v" id="v2vPill" title="V2V Telemetry Status">
+          <div class="status-dot pulsing" id="statusDot"></div>
+          <span id="v2vStatusText">V2V</span>
+        </div>
+
+        <button class="icon-btn" id="soundToggleBtn" title="Toggle Siren Audio" aria-label="Toggle Siren Audio">
+          <svg id="soundIcon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Screens Container -->
+    <main class="main-content">
+      <!-- 1. DRIVER HUD SCREEN -->
+      <section id="screenDriver" class="screen-view active">
+        <!-- Device Registration & Role Status Card -->
+        <div class="card device-role-card" style="margin-bottom: 12px; border-left: 4px solid var(--accent);">
+          <div class="card-header-row" style="margin-bottom: 6px;">
+            <div>
+              <span class="card-section-title">ACTIVE DEVICE & ROLE CONFIGURATION</span>
+              <div style="font-size: 13px; margin-top: 2px;">
+                ID: <strong id="hudDeviceId" style="color: var(--text-primary);">V001</strong> • Role: <strong id="hudDeviceRole" style="color: var(--accent);">NORMAL_VEHICLE</strong>
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <span class="badge-pill" id="hudModeBadge" style="background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3);">LIVE</span>
+              <span class="badge-pill" id="hudRoleBadge">VEHICLE</span>
+            </div>
+          </div>
+          <div class="device-role-details" style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border-subtle); padding-top: 6px;">
+            <div>Ambulance Designated Lane: <strong id="hudAmbConfigLane" style="color: #38bdf8;">CENTER (L2)</strong></div>
+            <div>Approach: <strong id="hudAmbConfigApproach" style="color: var(--text-primary);">NORTH_SOUTH</strong></div>
+          </div>
+        </div>
+
+        <!-- Status Area (Safe / Emergency) -->
+        <div id="alertBanner" class="alert-banner safe">
+          <div class="alert-accent-bar"></div>
+          <div class="alert-body">
+            <div class="alert-header">
+              <svg id="alertIcon" width="20" height="20" viewBox="0 0 24 24" fill="#22C55E">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+              </svg>
+              <span id="alertTitle" class="alert-title">Path is Clear</span>
+            </div>
+            <div id="alertSubtitle" class="alert-subtitle">No active emergency vehicles detected in your path.</div>
+
+            <!-- Emergency Metrics (Visible when alerted) -->
+            <div id="emergencyMetrics" class="emergency-metrics" style="display: none;">
+              <div class="metric-col">
+                <div class="metric-label">DISTANCE</div>
+                <div class="metric-value" id="alertDistanceVal">—</div>
+              </div>
+              <div class="metric-col">
+                <div class="metric-label">ETA</div>
+                <div class="metric-value" id="alertEtaVal">—</div>
+              </div>
+              <div class="metric-col">
+                <div class="metric-label">AMB. LANE</div>
+                <div class="metric-value" id="alertAmbLaneVal">2</div>
+              </div>
+            </div>
+
+            <!-- Clearance Actions -->
+            <div id="clearActions" class="action-buttons" style="display: none;">
+              <button id="btnShiftLeft" class="btn-clear-lane">
+                <span>◀</span> CLEAR LEFT (L1)
+              </button>
+              <button id="btnShiftRight" class="btn-clear-lane">
+                CLEAR RIGHT (L3) <span>▶</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lane Indicator Widget -->
+        <div class="lane-widget-card">
+          <div class="widget-header">
+            <span class="widget-title">YOUR CURRENT LANE</span>
+            <span id="laneStatusBadge" class="lane-status-badge safe">CLEAR</span>
+          </div>
+
+          <div class="road-lanes">
+            <!-- Lane 1 (Left) -->
+            <div class="lane-segment" id="lane1Btn" data-lane="1">
+              <div id="beaconLane1" class="ambulance-lane-beacon" style="display: none;">🚨 AMB</div>
+              <span class="lane-car-icon" id="carIconL1" style="display: none;">🚗</span>
+              <span class="lane-num">1</span>
+              <span class="lane-name">Left</span>
+            </div>
+
+            <!-- Lane 2 (Center) -->
+            <div class="lane-segment active-vehicle" id="lane2Btn" data-lane="2">
+              <div id="beaconLane2" class="ambulance-lane-beacon" style="display: none;">🚨 AMB</div>
+              <span class="lane-car-icon" id="carIconL2">🚗</span>
+              <span class="lane-num">2</span>
+              <span class="lane-name">Center</span>
+            </div>
+
+            <!-- Lane 3 (Right) -->
+            <div class="lane-segment" id="lane3Btn" data-lane="3">
+              <div id="beaconLane3" class="ambulance-lane-beacon" style="display: none;">🚨 AMB</div>
+              <span class="lane-car-icon" id="carIconL3" style="display: none;">🚗</span>
+              <span class="lane-num">3</span>
+              <span class="lane-name">Right</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Upcoming Junction Card on HUD -->
+        <div class="junction-hud-card" id="hudJunctionCard">
+          <div class="junction-hud-header">
+            <div class="junc-title-box">
+              <span class="junc-hud-tag">UPCOMING JUNCTION (JUNC_01)</span>
+              <span class="junc-hud-name">MG Road & Brigade Rd</span>
+            </div>
+            <span id="hudJuncStatusBadge" class="junc-hud-badge">NORMAL CYCLE</span>
+          </div>
+
+          <div class="junc-hud-body">
+            <div class="junc-mini-signal">
+              <div class="mini-lamp red" id="hudLampRed"></div>
+              <div class="mini-lamp yellow" id="hudLampYellow"></div>
+              <div class="mini-lamp green on" id="hudLampGreen"></div>
+            </div>
+            <div class="junc-hud-details">
+              <div class="junc-metric">
+                <span class="lbl">AMBULANCE ETA</span>
+                <span class="val" id="hudJuncEta">—</span>
+              </div>
+              <div class="junc-metric">
+                <span class="lbl">SIGNAL PRIORITY</span>
+                <span class="val" id="hudJuncPriority">IDLE</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ambulance Approach & Siren Control -->
+        <div class="approach-card">
+          <div class="approach-row">
+            <div class="switch-label">
+              <span class="title">Ambulance Emergency Mode</span>
+              <span class="desc" id="ambStatusDesc">Siren ACTIVE • Rapid Clearance Corridor</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="emergencyToggle" checked>
+              <span class="slider-switch"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Telemetry Cards -->
+        <div class="telemetry-grid">
+          <div class="telemetry-card">
+            <div class="telemetry-icon-box">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 4C7.03 4 3 8.03 3 13c0 2.22.81 4.25 2.16 5.82l1.42-1.42C5.54 16.14 5 14.64 5 13c0-3.87 3.13-7 7-7s7 3.13 7 7c0 1.64-.54 3.14-1.58 4.4l1.42 1.42C20.19 17.25 21 15.22 21 13c0-4.97-4.03-9-9-9zm0 5c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38l4.44-4.44C12.87 9.38 12.45 9 12 9z"/>
+              </svg>
+            </div>
+            <div class="telemetry-data">
+              <div class="tel-label">YOUR SPEED</div>
+              <div class="tel-val"><span id="speedVal">40</span> <span class="tel-unit">km/h</span></div>
+            </div>
+          </div>
+
+          <div class="telemetry-card">
+            <div class="telemetry-icon-box" id="distIconBox">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h2v4h2V8h2v4h2V8h2v4h2V8h2v4h2V8h3v8z"/>
+              </svg>
+            </div>
+            <div class="telemetry-data">
+              <div class="tel-label">AMB. DISTANCE</div>
+              <div class="tel-val"><span id="ambDistVal">—</span> <span class="tel-unit" id="ambDistUnit"></span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. CAMERA & ML LANE ESTIMATION SCREEN -->
+      <section id="screenCamera" class="screen-view">
+        <div class="camera-panel-wrapper">
+          <!-- Video / Live Snapshot Box -->
+          <div class="camera-preview-container">
+            <img id="cameraLiveFeed" class="camera-feed-img" src="/api/camera/preview" alt="Vehicle Camera Feed" />
+            <div class="camera-overlay-badge" id="cameraSourceBadge">PHYSICAL USB (0)</div>
+            <div class="camera-fps-pill" id="cameraFpsPill">STILL PHOTO (5s)</div>
+          </div>
+
+          <!-- Camera Access Power Control Bar -->
+          <div class="card camera-access-control-card">
+            <div class="card-header-row">
+              <div>
+                <span class="card-section-title">CAMERA ACCESS & HARDWARE POWER</span>
+                <div style="font-size: 12px; color: var(--text-muted);">Strict still-image capture every 5s • No continuous video recording</div>
+              </div>
+              <span class="badge-pill" id="cameraAccessPill" style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4);">ACCESS: OFF</span>
+            </div>
+
+            <div class="camera-access-button-group" style="display: flex; gap: 10px; margin-top: 10px;">
+              <button class="btn-power-on" id="btnCameraTurnOn">
+                <span>▶</span> TURN ON CAMERA
+              </button>
+              <button class="btn-power-off active" id="btnCameraTurnOff">
+                <span>⏹</span> TURN OFF CAMERA
+              </button>
+            </div>
+            
+            <button class="btn-primary" id="btnManualCapture" style="margin-top: 10px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <span>📸</span> CAPTURE PHOTO NOW (POST /api/camera/capture)
+            </button>
+
+            <div class="approach-row" style="margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border-subtle);">
+              <div class="switch-label">
+                <span class="title">Diagnostic Image Retention</span>
+                <span class="desc">Save photos to disk for debug (Default: OFF / Discarded immediately)</span>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="retentionToggle">
+                <span class="slider-switch"></span>
+              </label>
+            </div>
+
+            <div id="cameraAccessStatusText" style="margin-top: 9px; font-size: 12px; color: var(--text-muted); text-align: center;">
+              Camera access is currently <strong>DISABLED</strong>. Camera hardware is completely stopped.
+            </div>
+          </div>
+
+          <!-- Camera Source Control Bar -->
+          <div class="camera-source-toolbar card">
+            <div class="source-toggle-group">
+              <button class="btn-source active" id="btnSourceUsb">Physical USB Camera (0)</button>
+              <button class="btn-source" id="btnSourceSim">Prerecorded Test Photo Mode</button>
+            </div>
+          </div>
+
+          <!-- Neural Model Telemetry Card -->
+          <div class="card">
+            <div class="card-header-row">
+              <span class="card-section-title">NEURAL ML INFERENCE TELEMETRY</span>
+              <span class="badge-pill active" id="camModelBadge">PyTorch CNN</span>
+            </div>
+
+            <div class="cam-metrics-grid">
+              <div class="metric-tile">
+                <div class="metric-caption">ESTIMATED LANE</div>
+                <div class="metric-strong" id="camLaneVal">CENTER</div>
+              </div>
+              <div class="metric-tile">
+                <div class="metric-caption">CONFIDENCE</div>
+                <div class="metric-strong" id="camConfVal">92%</div>
+              </div>
+              <div class="metric-tile">
+                <div class="metric-caption">LATERAL OFFSET</div>
+                <div class="metric-strong" id="camOffsetVal">+0.08 m</div>
+              </div>
+              <div class="metric-tile">
+                <div class="metric-caption">INFERENCE LATENCY</div>
+                <div class="metric-strong" id="camLatencyVal">11.4 ms</div>
+              </div>
+            </div>
+
+            <div class="camera-info-footer">
+              <div class="info-row">
+                <span>Capture Status:</span>
+                <strong id="camCaptureStatus">IDLE</strong>
+              </div>
+              <div class="info-row">
+                <span>Last Capture Timestamp:</span>
+                <strong id="camLastCaptureTime">—</strong>
+              </div>
+              <div class="info-row">
+                <span>Illumination Condition:</span>
+                <strong id="camLightVal">NORMAL DAYLIGHT</strong>
+              </div>
+              <div class="info-row">
+                <span>Evaluation Mode:</span>
+                <strong id="camTrackingVal">STILL PHOTO (5s Window)</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. JUNCTION & ESP32 TRAFFIC SIGNAL SCREEN -->
+      <section id="screenJunction" class="screen-view">
+        <div class="junction-panel-wrapper">
+          <!-- Hardware Connection Status Card -->
+          <div class="card">
+            <div class="card-header-row">
+              <div>
+                <span class="card-section-title">JUNCTION CONTROLLER HARDWARE</span>
+                <div style="font-size: 12px; color: var(--text-muted);">MG Road & Brigade Rd (JUNC_01)</div>
+              </div>
+              <span class="badge-pill active" id="esp32HwBadge">ESP32: CONNECTED (COM5)</span>
+            </div>
+
+            <div class="approach-row" style="margin-top: 10px;">
+              <div class="switch-label">
+                <span class="title">Active Sequence State</span>
+                <span class="desc" id="juncStateDesc">Approach A Green • Approach B Red</span>
+              </div>
+              <span class="badge-state-pill" id="juncStatePill">NORMAL_CYCLE</span>
+            </div>
+          </div>
+
+          <!-- Dual-Aspect Traffic Signal Head Visualizer -->
+          <div class="traffic-signals-container">
+            <!-- Approach A: Emergency Approach (North-South) -->
+            <div class="signal-head-box">
+              <div class="signal-approach-label">APPROACH A (EMERGENCY)</div>
+              <div class="signal-housing">
+                <div class="signal-lamp red" id="sigARed"></div>
+                <div class="signal-lamp yellow" id="sigAYellow"></div>
+                <div class="signal-lamp green on" id="sigAGreen"></div>
+              </div>
+              <div class="signal-status-label" id="labelAppA">GREEN ACTIVE</div>
+            </div>
+
+            <!-- Approach B: Cross Street (East-West) -->
+            <div class="signal-head-box">
+              <div class="signal-approach-label">APPROACH B (CROSS-STREET)</div>
+              <div class="signal-housing">
+                <div class="signal-lamp red on" id="sigBRed"></div>
+                <div class="signal-lamp yellow" id="sigBYellow"></div>
+                <div class="signal-lamp green" id="sigBGreen"></div>
+              </div>
+              <div class="signal-status-label" id="labelAppB">STOP / RED</div>
+            </div>
+          </div>
+
+          <!-- Priority Request Status Card -->
+          <div class="card">
+            <div class="card-header-row">
+              <span class="card-section-title">ETA-TRIGGERED SIGNAL PRIORITY</span>
+              <span class="badge-pill" id="priorityStatusBadge">IDLE</span>
+            </div>
+
+            <div class="cam-metrics-grid" style="margin-top: 10px;">
+              <div class="metric-tile">
+                <div class="metric-caption">AMBULANCE DISTANCE</div>
+                <div class="metric-strong" id="juncDistVal">— m</div>
+              </div>
+              <div class="metric-tile">
+                <div class="metric-caption">AMBULANCE ETA</div>
+                <div class="metric-strong" id="juncEtaVal">— s</div>
+              </div>
+            </div>
+
+            <div style="margin-top: 14px; display: flex; gap: 10px;">
+              <button class="btn-primary" id="btnTestPriorityTrigger" style="flex: 1;">Trigger Test Priority</button>
+              <button class="btn-secondary" id="btnTestPriorityClear" style="flex: 1;">Clear Priority</button>
+            </div>
+          </div>
+
+          <!-- State Transition Log -->
+          <div class="card">
+            <span class="card-section-title">SIGNAL STATE TRANSITION HISTORY</span>
+            <div class="transition-log-list" id="transitionLogList">
+              <div class="log-entry">Normal cycling active (Approach A Green 10s, Yellow 3s, All-Red 1.5s).</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. LIVE MAP SCREEN -->
+      <section id="screenMap" class="screen-view">
+        <div class="map-screen-wrapper">
+          <div id="map"></div>
+
+          <div class="map-floating-controls">
+            <button class="map-control-btn" id="btnCenterAmbulance" title="Recenter on Ambulance">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+              Center
+            </button>
+            <button class="map-control-btn" id="btnToggleSimPlay">
+              <span id="playIcon">▶</span> <span id="playText">Play</span>
+            </button>
+            <button class="map-control-btn" id="btnResetScenario" title="Reset Demonstration Scenario">
+              ↺ Reset
+            </button>
+          </div>
+
+          <div class="map-legend">
+            <div class="legend-item"><span class="legend-dot" style="background:#EF4444;"></span> Ambulance</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#6366F1;"></span> Vehicles</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#38BDF8;"></span> Route Corridor</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#22C55E;"></span> Junction (JUNC_01)</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. SETTINGS & INTEGRATION SCREEN -->
+      <section id="screenSettings" class="screen-view">
+        <div class="settings-section-title">BACKEND & WEBSOCKET CONNECTION</div>
+        <div class="card">
+          <div class="approach-row" style="margin-bottom: 16px;">
+            <div class="switch-label">
+              <span class="title">FastAPI Backend Mode</span>
+              <span class="desc" id="backendModeDesc">Receiving real-time telemetry</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="backendToggle">
+              <span class="slider-switch"></span>
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="wsUrlInput">WebSocket Host / Base URL</label>
+            <input type="text" id="wsUrlInput" class="form-input" placeholder="ws://localhost:8000">
+          </div>
+
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <button id="btnConnectWs" class="btn-primary" style="flex: 1;">Connect</button>
+            <button id="btnDisconnectWs" class="btn-secondary" style="flex: 1;" disabled>Disconnect</button>
+          </div>
+
+          <div style="margin-top: 14px; font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between;">
+            <span>Status: <strong id="wsStatusBadge" style="color: var(--text-muted);">STANDALONE</strong></span>
+            <span>Messages: <strong id="wsMsgCount">0</strong></span>
+          </div>
+        </div>
+
+        <div class="settings-section-title">ACTIVE VEHICLE IDENTIFIER</div>
+        <div class="card">
+          <div class="form-group">
+            <label class="form-label" for="vehicleSelect">Select Vehicle Profile</label>
+            <select id="vehicleSelect" class="form-select">
+              <option value="V002" selected>V002 — SUV (Center Lane 2, Targeted)</option>
+              <option value="V001">V001 — Sedan (Left Lane 1)</option>
+              <option value="V003">V003 — Hatchback (Right Lane 3)</option>
+            </select>
+          </div>
+        <div class="settings-section-title">HONEST DEMONSTRATION MODE (DETERMINISTIC TEST FIXTURES)</div>
+        <div class="card">
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+            Deterministic scenario runner for classroom evaluation without physical hardware or GPS. All data is explicitly tagged <strong>[TEST DATA / SIMULATED]</strong>.
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="demoScenarioSelect">Select Test Scenario</label>
+            <select id="demoScenarioSelect" class="form-select">
+              <option value="DIRECT_BLOCKING">Scenario 1: Direct Lane Blocking (Ambulance & V002 in Center Lane 2)</option>
+              <option value="ADJACENT_CLEAR">Scenario 2: Adjacent Clear Lane (Ambulance Center L2, V001 Left L1)</option>
+              <option value="UNKNOWN_LANE">Scenario 3: Unknown Lane / Low Confidence (Conf < 0.45)</option>
+              <option value="ETA_SIGNAL_PREEMPTION">Scenario 4: ETA Signal Preemption (ETA < 15s triggers JUNC_01 clearance)</option>
+              <option value="STALE_TELEMETRY">Scenario 5: Stale Telemetry Protection (GPS age > 20s blocks priority)</option>
+            </select>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button id="btnRunScenario" class="btn-primary" style="flex: 1;">▶ Run Test Scenario</button>
+            <button id="btnResetScenarioLive" class="btn-secondary" style="flex: 1;">↺ Reset to Live Mode</button>
+          </div>
+          <div id="demoScenarioDetails" style="margin-top: 12px; font-size: 11px; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px; display: none;"></div>
+        </div>
+
+        <div class="settings-section-title">DEVICE REGISTRATION & ROLE AUTHORIZATION</div>
+        <div class="card">
+          <div class="form-group">
+            <label class="form-label" for="regDeviceId">Device ID</label>
+            <input type="text" id="regDeviceId" class="form-input" value="V002">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="regDeviceRole">Device Role</label>
+            <select id="regDeviceRole" class="form-select">
+              <option value="NORMAL_VEHICLE">NORMAL_VEHICLE</option>
+              <option value="AMBULANCE">AMBULANCE (Requires Admin PIN)</option>
+            </select>
+          </div>
+          <div class="form-group" id="adminPinGroup" style="display: none;">
+            <label class="form-label" for="regAdminPin">Admin PIN (Required for AMBULANCE role)</label>
+            <input type="password" id="regAdminPin" class="form-input" placeholder="Enter PIN (e.g. 9911)">
+          </div>
+          <button id="btnRegisterDevice" class="btn-primary" style="width: 100%;">Register Device</button>
+        </div>
+
+        <div class="settings-section-title">AMBULANCE FIXED LANE & APPROACH CONFIGURATION</div>
+        <div class="card">
+          <div class="form-group">
+            <label class="form-label" for="ambConfigLane">Designated Clearance Lane</label>
+            <select id="ambConfigLane" class="form-select">
+              <option value="LEFT">LEFT (Lane 1)</option>
+              <option value="CENTER" selected>CENTER (Lane 2)</option>
+              <option value="RIGHT">RIGHT (Lane 3)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ambConfigApproach">Designated Junction Approach</label>
+            <select id="ambConfigApproach" class="form-select">
+              <option value="NORTH_SOUTH" selected>NORTH_SOUTH (Approach A)</option>
+              <option value="EAST_WEST">EAST_WEST (Approach B)</option>
+            </select>
+          </div>
+          <button id="btnSaveAmbConfig" class="btn-secondary" style="width: 100%;">Save Ambulance Configuration</button>
+        </div>
+
+        <div class="settings-section-title">AUDIO & VIBRATION FEEDBACK</div>
+        <div class="card">
+          <div class="approach-row" style="margin-bottom: 12px;">
+            <div class="switch-label">
+              <span class="title">Synthesized Siren Audio</span>
+              <span class="desc">Audible emergency vehicle warning</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="soundToggle" checked>
+              <span class="slider-switch"></span>
+            </label>
+          </div>
+
+          <div class="approach-row">
+            <div class="switch-label">
+              <span class="title">Haptic Vibration</span>
+              <span class="desc">Mobile tactile alerts</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="vibrationToggle" checked>
+              <span class="slider-switch"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-section-title">REST DIAGNOSTICS & HARDWARE INTEGRATION</div>
+        <div class="card">
+          <button id="btnFetchStatus" class="btn-secondary" style="width: 100%; margin-bottom: 12px;">
+            Poll Backend Status (GET /status)
+          </button>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Upload Custom Image Frame (POST /api/camera/frame/{id})</label>
+            <input type="file" id="cameraFileInput" accept="image/jpeg,image/png,image/webp" class="form-input" style="padding: 6px;">
+          </div>
+
+          <div id="diagOutput" class="diagnostic-output" style="display: none;"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Navigation Bar (5 tabs) -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" id="navDriverBtn">
+        <span class="nav-badge" id="navAlertBadge"></span>
+        <svg viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+        <span>Driver</span>
+      </button>
+
+      <button class="nav-item" id="navCameraBtn">
+        <svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+        <span>Camera AI</span>
+      </button>
+
+      <button class="nav-item" id="navJunctionBtn">
+        <svg viewBox="0 0 24 24"><path d="M12 2C8.69 2 6 4.69 6 8v8c0 3.31 2.69 6 6 6s6-2.69 6-6V8c0-3.31-2.69-6-6-6zm0 4c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm0 6c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm0 6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+        <span>Junction</span>
+      </button>
+
+      <button class="nav-item" id="navMapBtn">
+        <svg viewBox="0 0 24 24"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
+        <span>Live Map</span>
+      </button>
+
+      <button class="nav-item" id="navSettingsBtn">
+        <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+        <span>Settings</span>
+      </button>
+    </nav>
+
+    <!-- Toast Notice -->
+    <div id="toastNotice" class="toast-notice"></div>
+  </div>
+
+  <!-- Leaflet Map JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>

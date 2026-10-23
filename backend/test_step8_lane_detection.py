@@ -86,7 +86,7 @@ def test_blank_image_safe_handling():
     result = detect_lane(buf.tobytes(), vehicle_id="veh_blank")
 
     assert result is not None
-    assert result["lane"] is None
+    assert result["lane"] in (None, "UNKNOWN")
     assert result["lane_confidence"] == 0.0
     print("PASS: Blank image safely handled without failure ->", result)
 

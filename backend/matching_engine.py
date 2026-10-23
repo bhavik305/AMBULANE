@@ -90,6 +90,9 @@ class MatchResult:
     should_alert: bool = False
     relevance_score: float = 0.0
     relevance_reason: str = ""
+    vehicle_lane: Optional[str] = "UNKNOWN"
+    ambulance_lane: str = "CENTER"
+    lane_conflict: str = "NONE"  # DIRECT_BLOCKING, ADJACENT_CLEAR, UNKNOWN_CAUTION, NONE
 
 
 class MatchingEngine:
@@ -100,6 +103,7 @@ class MatchingEngine:
         ambulance: AmbulanceState,
         vehicle_states: List[VehicleState],
         corridor: Optional[Corridor] = None,
+        ambulance_lane: Optional[str] = None,
     ) -> List[MatchResult]:
         """Return one MatchResult per vehicle describing its relationship
         to the ambulance."""
@@ -124,9 +128,19 @@ class DefaultMatchingEngine(MatchingEngine):
         ambulance: AmbulanceState,
         vehicle_states: List[VehicleState],
         corridor: Optional[Corridor] = None,
+        ambulance_lane: Optional[str] = None,
     ) -> List[MatchResult]:
-        """Evaluate participant vehicles against ambulance telemetry and route corridor."""
+        """Evaluate participant vehicles against ambulance telemetry, corridor, and camera lanes."""
         results: List[MatchResult] = []
+
+        # Determine ambulance fixed designated lane
+        target_amb_lane = (ambulance_lane or "CENTER").upper()
+        try:
+            from device_service import get_device_service
+            amb_cfg = get_device_service().get_ambulance_config(ambulance.ambulance_id or "AMB01")
+            target_amb_lane = amb_cfg.get("configured_lane", "CENTER").upper()
+        except Exception:
+            pass
 
         if not ambulance.emergency:
             # Ambulance is not in emergency mode; no vehicles need clearance
@@ -137,6 +151,9 @@ class DefaultMatchingEngine(MatchingEngine):
                         in_corridor=False,
                         distance_m=haversine_distance_m(ambulance.lat, ambulance.lng, v.lat, v.lng),
                         relevance_reason="Ambulance is not in emergency mode",
+                        vehicle_lane=str(v.lane).upper() if v.lane else "UNKNOWN",
+                        ambulance_lane=target_amb_lane,
+                        lane_conflict="NONE",
                     )
                 )
             return results
@@ -150,9 +167,24 @@ class DefaultMatchingEngine(MatchingEngine):
         amb_speed_ms = (ambulance.speed_kmh or 0.0) / 3.6
 
         for v in vehicle_states:
+            # Skip if vehicle is the ambulance itself
+            if v.vehicle_id == (ambulance.ambulance_id or "AMB01"):
+                continue
+
             # 1. Freshness check
             is_fresh = not v.is_stale(max_age_seconds=self.config.max_age_seconds)
             dist_m = haversine_distance_m(ambulance.lat, ambulance.lng, v.lat, v.lng)
+
+            # Resolve camera-detected vehicle lane
+            v_lane_raw = str(v.lane).strip().upper() if v.lane else "UNKNOWN"
+            if v_lane_raw in ("1", "LEFT"):
+                veh_lane = "LEFT"
+            elif v_lane_raw in ("2", "CENTER"):
+                veh_lane = "CENTER"
+            elif v_lane_raw in ("3", "RIGHT"):
+                veh_lane = "RIGHT"
+            else:
+                veh_lane = "UNKNOWN"
 
             if not is_fresh:
                 results.append(
@@ -163,7 +195,10 @@ class DefaultMatchingEngine(MatchingEngine):
                         data_fresh=False,
                         should_alert=False,
                         relevance_score=0.0,
-                        relevance_reason="Telemetry is stale or vehicle disconnected",
+                        relevance_reason="Telemetry is stale (>20s old) - ignored",
+                        vehicle_lane=veh_lane,
+                        ambulance_lane=target_amb_lane,
+                        lane_conflict="NONE",
                     )
                 )
                 continue
@@ -179,12 +214,14 @@ class DefaultMatchingEngine(MatchingEngine):
                         should_alert=False,
                         relevance_score=0.0,
                         relevance_reason=f"Outside search radius ({dist_m:.0f}m > {self.config.max_search_radius_m}m)",
+                        vehicle_lane=veh_lane,
+                        ambulance_lane=target_amb_lane,
+                        lane_conflict="NONE",
                     )
                 )
                 continue
 
             # 3. Ahead vs Behind determination
-            # Bearing from ambulance toward vehicle
             bearing_to_veh = bearing_deg(ambulance.lat, ambulance.lng, v.lat, v.lng)
             is_ahead = True
             if amb_has_heading:
@@ -198,11 +235,10 @@ class DefaultMatchingEngine(MatchingEngine):
                 corridor_dist_m = self._route_engine.distance_to_corridor_m(v.lat, v.lng, corridor)
                 in_corridor = (corridor_dist_m <= corridor.width_m)
             else:
-                # If no planned route corridor is active, evaluate corridor using proximity & forward cone
                 in_corridor = is_ahead and (dist_m <= self.config.max_search_radius_m)
                 corridor_dist_m = dist_m
 
-            # 5. Heading alignment (if vehicle provides reliable heading)
+            # 5. Heading alignment
             heading_aligned: Optional[bool] = None
             if (
                 v.speed_kmh is not None
@@ -218,9 +254,10 @@ class DefaultMatchingEngine(MatchingEngine):
             if amb_speed_ms > 1.0 and is_ahead:
                 time_to_encounter_s = round(dist_m / amb_speed_ms, 1)
 
-            # 7. Relevance scoring and should_alert assessment
+            # 7. Lane-Aware Conflict Evaluation (PHASE 5)
             should_alert = False
             relevance_score = 0.0
+            lane_conflict = "NONE"
             reason_parts = []
 
             if not is_ahead:
@@ -228,11 +265,26 @@ class DefaultMatchingEngine(MatchingEngine):
             elif not in_corridor:
                 reason_parts.append(f"Outside route corridor ({corridor_dist_m:.1f}m from route)")
             else:
-                # Vehicle is ahead and in the route corridor
-                should_alert = True
                 dist_factor = max(0.0, 1.0 - (dist_m / self.config.max_search_radius_m))
-                relevance_score = round(0.5 + 0.5 * dist_factor, 2)
-                reason_parts.append(f"Ahead in route corridor at {dist_m:.0f}m")
+                if veh_lane == target_amb_lane:
+                    # DIRECT SAME-LANE CONFLICT
+                    lane_conflict = "DIRECT_BLOCKING"
+                    should_alert = True
+                    relevance_score = round(0.70 + 0.30 * dist_factor, 2)
+                    reason_parts.append(f"DIRECT CONFLICT: In ambulance lane ({target_amb_lane}) at {dist_m:.0f}m - EVACUATE LANE")
+                elif veh_lane == "UNKNOWN":
+                    # AMBIGUOUS / UNKNOWN LANE
+                    lane_conflict = "UNKNOWN_CAUTION"
+                    should_alert = True
+                    relevance_score = round(0.45 + 0.45 * dist_factor, 2)
+                    reason_parts.append(f"Ahead in corridor at {dist_m:.0f}m; lane UNKNOWN - caution advised")
+                else:
+                    # ADJACENT LANE (e.g. Left vs Center)
+                    lane_conflict = "ADJACENT_CLEAR"
+                    should_alert = False  # Vehicle does not block ambulance path
+                    relevance_score = 0.25
+                    reason_parts.append(f"Adjacent lane ({veh_lane}); ambulance in {target_amb_lane} - maintain course")
+
                 if time_to_encounter_s is not None:
                     reason_parts.append(f"encounter in ~{time_to_encounter_s}s")
 
@@ -249,6 +301,9 @@ class DefaultMatchingEngine(MatchingEngine):
                     should_alert=should_alert,
                     relevance_score=relevance_score,
                     relevance_reason=", ".join(reason_parts),
+                    vehicle_lane=veh_lane,
+                    ambulance_lane=target_amb_lane,
+                    lane_conflict=lane_conflict,
                 )
             )
 

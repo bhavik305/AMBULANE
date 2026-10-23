@@ -56,6 +56,10 @@ async def _handle_telemetry(vehicle_id: str, websocket: WebSocket, raw: Any) -> 
     """Validate an incoming telemetry message and update vehicle state."""
     ws_manager = get_ws_manager()
 
+    if isinstance(raw, dict):
+        if "vehicle_id" not in raw and "id" not in raw:
+            raw["vehicle_id"] = vehicle_id
+
     # --- 1. Validate -----------------------------------------------------
     try:
         telemetry = VehicleTelemetry.model_validate(raw)
@@ -104,6 +108,13 @@ async def _handle_telemetry(vehicle_id: str, websocket: WebSocket, raw: Any) -> 
             "received_at": state.received_at,
         }
     )
+
+    # Dispatch alerts and fleet updates
+    try:
+        from dispatch_service import dispatch_alerts_and_fleet
+        await dispatch_alerts_and_fleet()
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Error in dispatch_alerts_and_fleet: %s", exc, exc_info=True)
 
 
 @router.websocket("/ws/vehicle/{vehicle_id}")
