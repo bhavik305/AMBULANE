@@ -40,31 +40,42 @@ async def dispatch_alerts_and_fleet(corridor=None) -> None:
     """Evaluate current ambulance & vehicles state and push alerts / fleet updates."""
     ws_mgr = get_ws_manager()
     amb = ws_mgr.ambulance_state
-    if amb is None:
-        return
+    now = time.time()
 
-    vehicles = list(ws_mgr.all_vehicle_states().values())
-    now = time.time()
-    now = time.time()
-    amb_lane_label = "CENTER"
+    # Resolve active journey and corridor
+    active_journey_data = None
     try:
-        from device_service import get_device_service
-        amb_cfg = get_device_service().get_ambulance_config(amb.ambulance_id or "AMB01")
-        amb_lane_label = amb_cfg.get("configured_lane", "CENTER").upper()
+        from journey_service import get_journey_service
+        j_svc = get_journey_service()
+        active_j = j_svc.get_active_journey()
+        if active_j:
+            active_journey_data = active_j.model_dump()
+        if corridor is None:
+            corridor = j_svc.get_active_corridor()
     except Exception:
         pass
-    amb_lane_num = 1 if amb_lane_label == "LEFT" else (3 if amb_lane_label == "RIGHT" else 2)
+
+    vehicles = list(ws_mgr.all_vehicle_states().values())
 
     from junction_service import get_junction_service
     junc_svc = get_junction_service()
-    await junc_svc.evaluate_eta_and_trigger(amb)
+    if amb is not None:
+        await junc_svc.evaluate_eta_and_trigger(amb)
     junctions_data = junc_svc.get_all_states()
 
-    # 1. Dispatch fleet update for Live Map, Fleet monitoring & Traffic Signals
-    fleet_payload = {
-        "type": "fleet_update",
-        "timestamp": now,
-        "ambulance": {
+    amb_lane_label = "CENTER"
+    amb_lane_num = 2
+    amb_payload = None
+
+    if amb is not None:
+        try:
+            from device_service import get_device_service
+            amb_cfg = get_device_service().get_ambulance_config(amb.ambulance_id or "AMB01")
+            amb_lane_label = amb_cfg.get("configured_lane", "CENTER").upper()
+        except Exception:
+            pass
+        amb_lane_num = 1 if amb_lane_label == "LEFT" else (3 if amb_lane_label == "RIGHT" else 2)
+        amb_payload = {
             "id": amb.ambulance_id or "AMB01",
             "lat": amb.lat,
             "lng": amb.lng,
@@ -73,7 +84,14 @@ async def dispatch_alerts_and_fleet(corridor=None) -> None:
             "emergency": amb.emergency,
             "lane": amb_lane_num,
             "lane_label": amb_lane_label,
-        },
+        }
+
+    # 1. Dispatch fleet update for Live Map, Fleet monitoring & Traffic Signals
+    fleet_payload = {
+        "type": "fleet_update",
+        "timestamp": now,
+        "ambulance": amb_payload,
+        "active_journey": active_journey_data,
         "vehicles": {
             v.vehicle_id: {
                 "id": v.vehicle_id,
@@ -90,8 +108,9 @@ async def dispatch_alerts_and_fleet(corridor=None) -> None:
     }
     await ws_mgr.broadcast(fleet_payload)
 
-    if not vehicles:
+    if amb is None or not vehicles:
         return
+
 
     # 2. Evaluate matches via matching engine
     engine = get_matching_engine()

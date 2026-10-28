@@ -275,3 +275,50 @@ class JunctionState(BaseModel):
     last_ack_request_id: Optional[str] = None
     last_reported_ts: float = 0.0
     hardware_mode: str = "SIMULATED"  # PHYSICAL_ESP32 or SIMULATED
+
+
+# ---------------------------------------------------------------------------
+# Active Ambulance Journey Models (PHASES 3 & 4)
+# ---------------------------------------------------------------------------
+class ActiveJourney(BaseModel):
+    journey_id: str = Field(..., description="Unique journey identifier")
+    ambulance_id: str = Field(default="AMB01", description="Identifier of the emergency vehicle")
+    origin_name: Optional[str] = Field(default=None, description="Human-readable origin address/name")
+    origin_lat: float = Field(..., ge=-90.0, le=90.0, description="Origin latitude")
+    origin_lng: float = Field(..., ge=-180.0, le=180.0, description="Origin longitude")
+    destination_name: Optional[str] = Field(default=None, description="Human-readable destination address/name")
+    destination_lat: float = Field(..., ge=-90.0, le=90.0, description="Destination latitude")
+    destination_lng: float = Field(..., ge=-180.0, le=180.0, description="Destination longitude")
+    route_points: list[dict[str, float]] = Field(
+        default_factory=list,
+        description="List of road-following coordinates: [{'lat': float, 'lng': float}]",
+    )
+    distance_meters: float = Field(default=0.0, ge=0.0, description="Total route distance in meters")
+    duration_seconds: float = Field(default=0.0, ge=0.0, description="Estimated duration in seconds")
+    assigned_lane: str = Field(default="CENTER", description="Configured ambulance lane: LEFT, CENTER, RIGHT")
+    is_active: bool = Field(default=True, description="Whether journey is actively underway")
+    started_at: float = Field(..., description="Unix timestamp when journey started")
+    stopped_at: Optional[float] = Field(default=None, description="Unix timestamp when journey finished")
+
+
+class StartJourneyRequest(BaseModel):
+    ambulance_id: str = Field(default="AMB01", description="Identifier of the emergency vehicle")
+    origin_name: Optional[str] = Field(default=None, description="Human-readable origin name")
+    origin_lat: float = Field(..., ge=-90.0, le=90.0, description="Origin latitude")
+    origin_lng: float = Field(..., ge=-180.0, le=180.0, description="Origin longitude")
+    destination_name: Optional[str] = Field(default=None, description="Human-readable destination name")
+    destination_lat: float = Field(..., ge=-90.0, le=90.0, description="Destination latitude")
+    destination_lng: float = Field(..., ge=-180.0, le=180.0, description="Destination longitude")
+    route_points: list[dict[str, float]] = Field(
+        default_factory=list,
+        description="Road-following route points [{'lat': float, 'lng': float}]",
+    )
+    distance_meters: float = Field(default=0.0, ge=0.0, description="Route distance in meters")
+    duration_seconds: float = Field(default=0.0, ge=0.0, description="Route duration in seconds")
+    assigned_lane: str = Field(default="CENTER", description="Configured ambulance clearance lane")
+    admin_pin: Optional[str] = Field(default=None, description="Admin authorization PIN if required")
+
+
+class StopJourneyRequest(BaseModel):
+    ambulance_id: str = Field(default="AMB01", description="Identifier of the emergency vehicle")
+    admin_pin: Optional[str] = Field(default=None, description="Admin authorization PIN if required")

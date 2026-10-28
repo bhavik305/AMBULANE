@@ -131,6 +131,7 @@ from api.camera import router as camera_router
 from api.junction import router as junction_router
 from api.device import router as device_router
 from api.demo import router as demo_router
+from api.journey import router as journey_router
 
 app.include_router(ambulance_router)
 app.include_router(vehicle_router)
@@ -138,6 +139,7 @@ app.include_router(camera_router)
 app.include_router(junction_router)
 app.include_router(device_router)
 app.include_router(demo_router)
+app.include_router(journey_router)
 
 # ---------------------------------------------------------------------------
 # Static Files & Frontend Web UI

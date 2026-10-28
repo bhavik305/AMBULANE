@@ -134,6 +134,16 @@ class DefaultMatchingEngine(MatchingEngine):
         results: List[MatchResult] = []
 
         # Determine ambulance fixed designated lane
+        # 0. Validate ambulance coordinates
+        if (
+            not (-90.0 <= ambulance.lat <= 90.0)
+            or not (-180.0 <= ambulance.lng <= 180.0)
+            or (ambulance.lat == 0.0 and ambulance.lng == 0.0)
+        ):
+            logger.warning("Ambulance coordinates invalid or unset: (%.4f, %.4f)", ambulance.lat, ambulance.lng)
+            return []
+
+        # Determine ambulance fixed designated lane
         target_amb_lane = (ambulance_lane or "CENTER").upper()
         try:
             from device_service import get_device_service
@@ -154,9 +164,20 @@ class DefaultMatchingEngine(MatchingEngine):
                         vehicle_lane=str(v.lane).upper() if v.lane else "UNKNOWN",
                         ambulance_lane=target_amb_lane,
                         lane_conflict="NONE",
+                        should_alert=False,
                     )
                 )
             return results
+
+        # Check for active journey corridor if no corridor explicitly passed
+        if corridor is None:
+            try:
+                from journey_service import get_journey_service
+                corridor = get_journey_service().get_active_corridor()
+            except Exception:
+                pass
+
+
 
         # Ambulance motion parameters
         amb_has_heading = (
@@ -167,8 +188,14 @@ class DefaultMatchingEngine(MatchingEngine):
         amb_speed_ms = (ambulance.speed_kmh or 0.0) / 3.6
 
         for v in vehicle_states:
-            # Skip if vehicle is the ambulance itself
+            # Skip if vehicle is the ambulance itself or invalid coordinates
             if v.vehicle_id == (ambulance.ambulance_id or "AMB01"):
+                continue
+            if (
+                not (-90.0 <= v.lat <= 90.0)
+                or not (-180.0 <= v.lng <= 180.0)
+                or (v.lat == 0.0 and v.lng == 0.0)
+            ):
                 continue
 
             # 1. Freshness check
@@ -184,6 +211,10 @@ class DefaultMatchingEngine(MatchingEngine):
             elif v_lane_raw in ("3", "RIGHT"):
                 veh_lane = "RIGHT"
             else:
+                veh_lane = "UNKNOWN"
+
+            # Check camera detection confidence: if too low (<0.50), treat as UNKNOWN
+            if v.lane_confidence is not None and v.lane_confidence < 0.50:
                 veh_lane = "UNKNOWN"
 
             if not is_fresh:
@@ -264,6 +295,12 @@ class DefaultMatchingEngine(MatchingEngine):
                 reason_parts.append("Behind ambulance")
             elif not in_corridor:
                 reason_parts.append(f"Outside route corridor ({corridor_dist_m:.1f}m from route)")
+            elif heading_aligned is False:
+                # Vehicle traveling in opposite direction (e.g. heading divergence > 60-75 deg)
+                lane_conflict = "OPPOSITE_DIRECTION"
+                should_alert = False
+                relevance_score = 0.15
+                reason_parts.append("Vehicle traveling in opposite direction - no clearance required")
             else:
                 dist_factor = max(0.0, 1.0 - (dist_m / self.config.max_search_radius_m))
                 if veh_lane == target_amb_lane:

@@ -12,10 +12,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Leaflet CSS for Dark Map -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-
-  <!-- App Stylesheet -->
+  <!-- Leaflet Interactive Map Engine & OpenStreetMap CSS -->
+  <link rel="stylesheet" href="vendor/leaflet.css">
   <link rel="stylesheet" href="app.css">
 </head>
 <body>
@@ -41,176 +39,409 @@
       </div>
     </header>
 
+    <!-- OPERATING MODE SELECTOR (PHASE 3) -->
+    <div class="mode-selector-banner" id="modeSelectorBanner">
+      <button type="button" id="btnModeVehicle" class="mode-selector-tab active" data-mode="NORMAL_VEHICLE">
+        <span class="mode-tab-icon">🚗</span>
+        <div class="mode-tab-info">
+          <span class="mode-tab-title">NORMAL VEHICLE MODE</span>
+          <span class="mode-tab-sub">Vehicle Telemetry & Camera AI</span>
+        </div>
+      </button>
+      <button type="button" id="btnModeAmbulance" class="mode-selector-tab" data-mode="AMBULANCE">
+        <span class="mode-tab-icon">🚑</span>
+        <div class="mode-tab-info">
+          <span class="mode-tab-title">AMBULANCE MODE</span>
+          <span class="mode-tab-sub">Emergency Journey Dispatch</span>
+        </div>
+      </button>
+    </div>
+
     <!-- Main Screens Container -->
     <main class="main-content">
       <!-- 1. DRIVER HUD SCREEN -->
       <section id="screenDriver" class="screen-view active">
-        <!-- Device Registration & Role Status Card -->
-        <div class="card device-role-card" style="margin-bottom: 12px; border-left: 4px solid var(--accent);">
-          <div class="card-header-row" style="margin-bottom: 6px;">
-            <div>
-              <span class="card-section-title">ACTIVE DEVICE & ROLE CONFIGURATION</span>
-              <div style="font-size: 13px; margin-top: 2px;">
-                ID: <strong id="hudDeviceId" style="color: var(--text-primary);">V001</strong> • Role: <strong id="hudDeviceRole" style="color: var(--accent);">NORMAL_VEHICLE</strong>
+        <!-- NORMAL VEHICLE OPERATIONAL PANEL (PHASE 3B) -->
+        <div id="normalVehiclePanel">
+
+          <!-- Device Registration & Role Status Card -->
+          <div class="card device-role-card" style="margin-bottom: 12px; border-left: 4px solid var(--accent);">
+            <div class="card-header-row" style="margin-bottom: 6px;">
+              <div>
+                <span class="card-section-title">ACTIVE PARTICIPANT VEHICLE</span>
+                <div style="font-size: 13px; margin-top: 2px;">
+                  ID: <strong id="hudDeviceId" style="color: var(--text-primary);">V001</strong> • Role: <strong id="hudDeviceRole" style="color: var(--accent);">NORMAL_VEHICLE</strong>
+                </div>
+              </div>
+              <div style="display: flex; gap: 6px; align-items: center;">
+                <span class="badge-pill" id="hudModeBadge" style="background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3);">LIVE</span>
+                <span class="badge-pill" id="hudRoleBadge">VEHICLE</span>
               </div>
             </div>
-            <div style="display: flex; gap: 6px; align-items: center;">
-              <span class="badge-pill" id="hudModeBadge" style="background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3);">LIVE</span>
-              <span class="badge-pill" id="hudRoleBadge">VEHICLE</span>
+            <div class="device-role-details" style="font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border-subtle); padding-top: 6px; display: flex; flex-direction: column; gap: 4px;">
+              <div style="display: flex; justify-content: space-between;">
+                <div>Ambulance Configured Lane: <strong id="hudAmbConfigLane" style="color: #38bdf8;">CENTER (L2)</strong><span id="hudAmbConfigApproach" style="display: none;">NORTH_SOUTH</span></div>
+                <div>GPS Status: <strong id="hudGpsStatus" style="color: var(--text-muted);">WAITING FOR DATA</strong></div>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <div>GPS Coords: <strong id="hudGpsCoords" style="color: var(--text-primary);">Waiting for GPS fix...</strong></div>
+                <div>Camera: <strong id="hudCamStatus" style="color: var(--text-muted);">STANDBY</strong></div>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <div>V2V Telemetry: <strong id="hudConnStatus" style="color: var(--text-muted);">CONNECTING...</strong></div>
+                <div>Last Update: <strong id="hudLastUpdate" style="color: var(--text-muted);">—</strong></div>
+              </div>
+              <input type="checkbox" id="emergencyToggle" style="display: none;">
             </div>
           </div>
-          <div class="device-role-details" style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border-subtle); padding-top: 6px;">
-            <div>Ambulance Designated Lane: <strong id="hudAmbConfigLane" style="color: #38bdf8;">CENTER (L2)</strong></div>
-            <div>Approach: <strong id="hudAmbConfigApproach" style="color: var(--text-primary);">NORTH_SOUTH</strong></div>
+
+          <!-- Status Area (Safe / Emergency / Proximity Alert) -->
+          <div id="alertBanner" class="alert-banner safe">
+            <div class="alert-accent-bar"></div>
+            <div class="alert-body">
+              <div class="alert-header">
+                <svg id="alertIcon" width="20" height="20" viewBox="0 0 24 24" fill="#22C55E">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <span id="alertTitle" class="alert-title">Path is Clear</span>
+              </div>
+              <div id="alertSubtitle" class="alert-subtitle">No active emergency vehicles detected in your path.</div>
+
+              <!-- Emergency Metrics (Visible when alerted) -->
+              <div id="emergencyMetrics" class="emergency-metrics" style="display: none;">
+                <div class="metric-col">
+                  <div class="metric-label">DISTANCE</div>
+                  <div class="metric-value" id="alertDistanceVal">—</div>
+                </div>
+                <div class="metric-col">
+                  <div class="metric-label">ETA</div>
+                  <div class="metric-value" id="alertEtaVal">—</div>
+                </div>
+                <div class="metric-col">
+                  <div class="metric-label">AMB. LANE</div>
+                  <div class="metric-value" id="alertAmbLaneVal">2</div>
+                </div>
+              </div>
+
+              <!-- Clearance Actions -->
+              <div id="clearActions" class="action-buttons" style="display: none;">
+                <button id="btnShiftLeft" class="btn-clear-lane">
+                  <span>◀</span> CLEAR LEFT (L1)
+                </button>
+                <button id="btnShiftRight" class="btn-clear-lane">
+                  CLEAR RIGHT (L3) <span>▶</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lane Indicator Widget -->
+          <div class="lane-widget-card">
+            <div class="widget-header">
+              <span class="widget-title">YOUR CURRENT LANE</span>
+              <span id="laneStatusBadge" class="lane-status-badge safe">CLEAR</span>
+            </div>
+
+            <div class="road-lanes">
+              <!-- Lane 1 (Left) -->
+              <div class="lane-segment" id="lane1Btn" data-lane="1">
+                <div id="beaconLane1" class="ambulance-lane-beacon" style="display: none;">🚨 AMB</div>
+                <span class="lane-car-icon" id="carIconL1" style="display: none;">🚗</span>
+                <span class="lane-num">1</span>
+                <span class="lane-name">Left</span>
+              </div>
+
+              <!-- Lane 2 (Center) -->
+              <div class="lane-segment active-vehicle" id="lane2Btn" data-lane="2">
+                <div id="beaconLane2" class="ambulance-lane-beacon" style="display: none;">🚨 AMB</div>
+                <span class="lane-car-icon" id="carIconL2">🚗</span>
+                <span class="lane-num">2</span>
+                <span class="lane-name">Center</span>
+              </div>
+
+              <!-- Lane 3 (Right) -->
+              <div class="lane-segment" id="lane3Btn" data-lane="3">
+                <div id="beaconLane3" class="ambulance-lane-beacon" style="display: none;">🚨 AMB</div>
+                <span class="lane-car-icon" id="carIconL3" style="display: none;">🚗</span>
+                <span class="lane-num">3</span>
+                <span class="lane-name">Right</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive Live Map (Normal Vehicle View) -->
+          <div class="card map-slot-card" style="margin-bottom: 12px; padding: 0; overflow: hidden; border-radius: 14px; position: relative; border: 1px solid var(--border);">
+            <div style="padding: 10px 14px; background: rgba(24, 24, 27, 0.9); border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+              <span class="card-section-title" style="margin: 0;">LIVE SPATIAL MAP (OPENSTREETMAP)</span>
+              <span style="font-size: 11px; color: var(--text-muted);">&copy; OpenStreetMap contributors</span>
+            </div>
+            <div id="vehicleMapSlot" style="height: 320px; width: 100%; position: relative;">
+              <div id="mapSharedWrapper" style="width: 100%; height: 100%; position: relative;">
+                <div id="map" style="width: 100%; height: 100%;"></div>
+
+                <!-- Live Telemetry Status Overlay -->
+                <div id="mapTelemetryBanner" class="map-telemetry-banner">
+                  <span class="status-indicator-dot waiting" id="mapStatusDot"></span>
+                  <span id="mapStatusText">Waiting for live backend telemetry...</span>
+                </div>
+
+                <div class="map-floating-controls">
+                  <button class="map-control-btn" id="btnCenterAmbulance" title="Recenter on Ambulance">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+                    Center Amb
+                  </button>
+                  <button class="map-control-btn" id="btnCenterMe" title="Recenter on My Vehicle">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                    Center Me
+                  </button>
+                  <button class="map-control-btn" id="btnFitRoute" title="Fit Map to Active Route">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
+                    Fit Route
+                  </button>
+                  <div id="demoSimControls" style="display: none; flex-direction: column; gap: 8px;">
+                    <button class="map-control-btn" id="btnToggleSimPlay">
+                      <span id="playIcon">▶</span> <span id="playText">Play</span>
+                    </button>
+                    <button class="map-control-btn" id="btnResetScenario" title="Reset Demonstration Scenario">
+                      ↺ Reset
+                    </button>
+                  </div>
+                </div>
+
+                <div class="map-legend">
+                  <div class="legend-item"><span class="legend-dot" style="background:#EF4444;"></span> Ambulance</div>
+                  <div class="legend-item"><span class="legend-dot" style="background:#6366F1;"></span> Vehicles</div>
+                  <div class="legend-item" id="legendCorridorItem" style="display: none;"><span class="legend-dot" style="background:#38BDF8;"></span> Road Route</div>
+                  <div class="legend-item" id="legendJuncItem"><span class="legend-dot" style="background:#22C55E;"></span> Junction (JUNC_01)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Upcoming Junction Card on HUD -->
+          <div class="junction-hud-card" id="hudJunctionCard">
+            <div class="junction-hud-header">
+              <div class="junc-title-box">
+                <span class="junc-hud-tag">UPCOMING JUNCTION (JUNC_01)</span>
+                <span class="junc-hud-name">MG Road & Brigade Rd</span>
+              </div>
+              <span id="hudJuncStatusBadge" class="junc-hud-badge">NORMAL CYCLE</span>
+            </div>
+
+            <div class="junc-hud-body">
+              <div class="junc-mini-signal">
+                <div class="mini-lamp red" id="hudLampRed"></div>
+                <div class="mini-lamp yellow" id="hudLampYellow"></div>
+                <div class="mini-lamp green on" id="hudLampGreen"></div>
+              </div>
+              <div class="junc-hud-details">
+                <div class="junc-metric">
+                  <span class="lbl">AMBULANCE ETA</span>
+                  <span class="val" id="hudJuncEta">—</span>
+                </div>
+                <div class="junc-metric">
+                  <span class="lbl">SIGNAL PRIORITY</span>
+                  <span class="val" id="hudJuncPriority">IDLE</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Telemetry Cards -->
+          <div class="telemetry-grid">
+            <div class="telemetry-card">
+              <div class="telemetry-icon-box">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 4C7.03 4 3 8.03 3 13c0 2.22.81 4.25 2.16 5.82l1.42-1.42C5.54 16.14 5 14.64 5 13c0-3.87 3.13-7 7-7s7 3.13 7 7c0 1.64-.54 3.14-1.58 4.4l1.42 1.42C20.19 17.25 21 15.22 21 13c0-4.97-4.03-9-9-9zm0 5c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38l4.44-4.44C12.87 9.38 12.45 9 12 9z"/>
+                </svg>
+              </div>
+              <div class="telemetry-data">
+                <div class="tel-label">YOUR SPEED</div>
+                <div class="tel-val"><span id="speedVal">—</span> <span class="tel-unit">km/h</span></div>
+              </div>
+            </div>
+
+            <div class="telemetry-card">
+              <div class="telemetry-icon-box" id="distIconBox">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h2v4h2V8h2v4h2V8h2v4h2V8h3v8z"/>
+                </svg>
+              </div>
+              <div class="telemetry-data">
+                <div class="tel-label">AMB. DISTANCE</div>
+                <div class="tel-val"><span id="ambDistVal">—</span> <span class="tel-unit" id="ambDistUnit"></span></div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Status Area (Safe / Emergency) -->
-        <div id="alertBanner" class="alert-banner safe">
-          <div class="alert-accent-bar"></div>
-          <div class="alert-body">
-            <div class="alert-header">
-              <svg id="alertIcon" width="20" height="20" viewBox="0 0 24 24" fill="#22C55E">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-              </svg>
-              <span id="alertTitle" class="alert-title">Path is Clear</span>
-            </div>
-            <div id="alertSubtitle" class="alert-subtitle">No active emergency vehicles detected in your path.</div>
-
-            <!-- Emergency Metrics (Visible when alerted) -->
-            <div id="emergencyMetrics" class="emergency-metrics" style="display: none;">
-              <div class="metric-col">
-                <div class="metric-label">DISTANCE</div>
-                <div class="metric-value" id="alertDistanceVal">—</div>
+        <!-- AMBULANCE OPERATIONAL PANEL (PHASE 3A) -->
+        <div id="ambulancePanel" style="display: none;">
+          <!-- Ambulance Device & Active Journey Status Card -->
+          <div class="card" style="margin-bottom: 12px; border-left: 4px solid #EF4444;">
+            <div class="amb-panel-header">
+              <div>
+                <span class="card-section-title">EMERGENCY VEHICLE DISPATCH CONSOLE</span>
+                <div style="font-size: 13px; margin-top: 2px;">
+                  Device ID: <strong id="ambConsoleId" style="color: var(--text-primary);">AMB01</strong> • Role: <strong style="color: #EF4444;">AMBULANCE</strong>
+                </div>
               </div>
-              <div class="metric-col">
-                <div class="metric-label">ETA</div>
-                <div class="metric-value" id="alertEtaVal">—</div>
-              </div>
-              <div class="metric-col">
-                <div class="metric-label">AMB. LANE</div>
-                <div class="metric-value" id="alertAmbLaneVal">2</div>
+              <div id="ambJourneyStatusBadge" class="amb-status-badge">
+                <span class="status-indicator-dot waiting" id="ambStatusDot"></span>
+                <span id="ambStatusText">STANDBY</span>
               </div>
             </div>
 
-            <!-- Clearance Actions -->
-            <div id="clearActions" class="action-buttons" style="display: none;">
-              <button id="btnShiftLeft" class="btn-clear-lane">
-                <span>◀</span> CLEAR LEFT (L1)
+            <div style="font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border-subtle); padding-top: 6px; margin-top: 8px; display: flex; flex-direction: column; gap: 4px;">
+              <div style="display: flex; justify-content: space-between;">
+                <div>Backend Fleet: <strong id="ambConnStatus" style="color: var(--text-muted);">CONNECTING...</strong></div>
+                <div>Last Telemetry: <strong id="ambLastUpdate" style="color: var(--text-muted);">—</strong></div>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <div>Live Moving GPS: <strong id="ambGpsCoords" style="color: #38BDF8;">Waiting for GPS fix...</strong></div>
+                <div>Assigned Lane: <strong id="ambCurrentLaneLabel" style="color: #FCA5A5;">CENTER (L2)</strong></div>
+              </div>
+            </div>
+
+            <!-- Origin & Destination Form with Autocomplete Dropdown -->
+            <div class="form-group" style="margin-bottom: 10px; position: relative;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <label class="form-label" for="ambStartInput" style="margin-bottom: 0;">Start Location / Origin</label>
+                <button id="btnAmbUseGps" type="button" class="btn-secondary" style="padding: 3px 8px; font-size: 11px;">
+                  📍 Use Current GPS
+                </button>
+              </div>
+              <input type="text" id="ambStartInput" class="form-input" placeholder="Search start location, hospital, or enter lat,lng..." autocomplete="off">
+              <div id="ambStartSuggestions" class="location-suggestions-dropdown" style="display: none;"></div>
+              <div id="ambStartGpsNotice" style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                Position: <span id="ambCurrentGpsLabel">Waiting for valid GPS signal...</span>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px; position: relative;">
+              <label class="form-label" for="ambDestInput">Destination Address / Hospital</label>
+              <input type="text" id="ambDestInput" class="form-input" placeholder="Search destination hospital, landmark, or enter lat,lng..." autocomplete="off">
+              <div id="ambDestSuggestions" class="location-suggestions-dropdown" style="display: none;"></div>
+            </div>
+
+            <!-- Assigned Clearance Lane Selector -->
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label class="form-label">
+                Assigned Ambulance Clearance Lane
+                <span style="font-size: 10px; font-weight: normal; color: var(--text-muted);">(Operator configured clearance corridor)</span>
+              </label>
+              <div class="lane-pill-group">
+                <button type="button" class="btn-lane-option" data-lane="LEFT" id="btnLaneLeft">LEFT (Lane 1)</button>
+                <button type="button" class="btn-lane-option selected" data-lane="CENTER" id="btnLaneCenter">CENTER (Lane 2)</button>
+                <button type="button" class="btn-lane-option" data-lane="RIGHT" id="btnLaneRight">RIGHT (Lane 3)</button>
+              </div>
+            </div>
+
+            <!-- Calculate & Preview Route Action -->
+            <div style="margin-bottom: 8px;">
+              <button type="button" id="btnCalcRoute" class="btn-secondary" style="width: 100%;">
+                🔍 Calculate & Preview Route (OSRM Road Routing)
               </button>
-              <button id="btnShiftRight" class="btn-clear-lane">
-                CLEAR RIGHT (L3) <span>▶</span>
+              <div id="ambRouteStatusNotice" style="display: none; font-size: 12px; margin-top: 8px; padding: 8px 12px; border-radius: 8px;"></div>
+            </div>
+
+            <!-- Route Distance and Duration Preview -->
+            <div class="route-preview-grid">
+              <div class="route-stat-box">
+                <div class="stat-label">ROUTE DISTANCE</div>
+                <div class="stat-value" id="ambRouteDistVal">— km</div>
+              </div>
+              <div class="route-stat-box">
+                <div class="stat-label">ESTIMATED DURATION</div>
+                <div class="stat-value" id="ambRouteEtaVal">— min</div>
+              </div>
+            </div>
+
+            <!-- Journey Control Buttons -->
+            <div style="display: flex; gap: 10px; margin-top: 14px;">
+              <button type="button" id="btnStartJourney" class="btn-start-journey" style="flex: 1;">
+                <span>🚨</span> START JOURNEY
+              </button>
+              <button type="button" id="btnStopJourney" class="btn-stop-journey" style="flex: 1;" disabled>
+                <span>⏹</span> STOP JOURNEY
               </button>
             </div>
           </div>
-        </div>
 
-        <!-- Lane Indicator Widget -->
-        <div class="lane-widget-card">
-          <div class="widget-header">
-            <span class="widget-title">YOUR CURRENT LANE</span>
-            <span id="laneStatusBadge" class="lane-status-badge safe">CLEAR</span>
+          <!-- Interactive Live Map (Ambulance Route Preview & Live Moving Position) -->
+          <div class="card map-slot-card" style="margin-bottom: 12px; padding: 0; overflow: hidden; border-radius: 14px; position: relative; border: 1px solid var(--border);">
+            <div style="padding: 10px 14px; background: rgba(24, 24, 27, 0.9); border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+              <span class="card-section-title" style="margin: 0;">EMERGENCY ROUTE & LIVE MAP (OPENSTREETMAP)</span>
+              <span style="font-size: 11px; color: var(--text-muted);">&copy; OpenStreetMap contributors</span>
+            </div>
+            <div id="ambulanceMapSlot" style="height: 340px; width: 100%; position: relative;"></div>
           </div>
 
-          <div class="road-lanes">
-            <!-- Lane 1 (Left) -->
-            <div class="lane-segment" id="lane1Btn" data-lane="1">
-              <div id="beaconLane1" class="ambulance-lane-beacon" style="display: none;">🚨 AMB</div>
-              <span class="lane-car-icon" id="carIconL1" style="display: none;">🚗</span>
-              <span class="lane-num">1</span>
-              <span class="lane-name">Left</span>
+          <!-- Live Telemetry Card for Ambulance Operator -->
+          <div class="card" style="margin-bottom: 12px;">
+            <div class="card-section-title">LIVE EMERGENCY TELEMETRY (MOVING POSITION)</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">
+              Ambulance's live moving location is derived strictly from real GPS telemetry, distinguishing live location from the manual origin address.
             </div>
-
-            <!-- Lane 2 (Center) -->
-            <div class="lane-segment active-vehicle" id="lane2Btn" data-lane="2">
-              <div id="beaconLane2" class="ambulance-lane-beacon" style="display: none;">🚨 AMB</div>
-              <span class="lane-car-icon" id="carIconL2">🚗</span>
-              <span class="lane-num">2</span>
-              <span class="lane-name">Center</span>
-            </div>
-
-            <!-- Lane 3 (Right) -->
-            <div class="lane-segment" id="lane3Btn" data-lane="3">
-              <div id="beaconLane3" class="ambulance-lane-beacon" style="display: none;">🚨 AMB</div>
-              <span class="lane-car-icon" id="carIconL3" style="display: none;">🚗</span>
-              <span class="lane-num">3</span>
-              <span class="lane-name">Right</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Upcoming Junction Card on HUD -->
-        <div class="junction-hud-card" id="hudJunctionCard">
-          <div class="junction-hud-header">
-            <div class="junc-title-box">
-              <span class="junc-hud-tag">UPCOMING JUNCTION (JUNC_01)</span>
-              <span class="junc-hud-name">MG Road & Brigade Rd</span>
-            </div>
-            <span id="hudJuncStatusBadge" class="junc-hud-badge">NORMAL CYCLE</span>
-          </div>
-
-          <div class="junc-hud-body">
-            <div class="junc-mini-signal">
-              <div class="mini-lamp red" id="hudLampRed"></div>
-              <div class="mini-lamp yellow" id="hudLampYellow"></div>
-              <div class="mini-lamp green on" id="hudLampGreen"></div>
-            </div>
-            <div class="junc-hud-details">
-              <div class="junc-metric">
-                <span class="lbl">AMBULANCE ETA</span>
-                <span class="val" id="hudJuncEta">—</span>
+            <div class="telemetry-grid">
+              <div class="telemetry-card">
+                <div class="telemetry-icon-box">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 4C7.03 4 3 8.03 3 13c0 2.22.81 4.25 2.16 5.82l1.42-1.42C5.54 16.14 5 14.64 5 13c0-3.87 3.13-7 7-7s7 3.13 7 7c0 1.64-.54 3.14-1.58 4.4l1.42 1.42C20.19 17.25 21 15.22 21 13c0-4.97-4.03-9-9-9zm0 5c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38l4.44-4.44C12.87 9.38 12.45 9 12 9z"/>
+                  </svg>
+                </div>
+                <div class="telemetry-data">
+                  <div class="tel-label">AMB. SPEED</div>
+                  <div class="tel-val"><span id="ambSpeedVal">—</span> <span class="tel-unit">km/h</span></div>
+                </div>
               </div>
-              <div class="junc-metric">
-                <span class="lbl">SIGNAL PRIORITY</span>
-                <span class="val" id="hudJuncPriority">IDLE</span>
+              <div class="telemetry-card">
+                <div class="telemetry-icon-box">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
+                  </svg>
+                </div>
+                <div class="telemetry-data">
+                  <div class="tel-label">HEADING</div>
+                  <div class="tel-val"><span id="ambHeadingVal">—</span> <span class="tel-unit">deg</span></div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Ambulance Approach & Siren Control -->
-        <div class="approach-card">
-          <div class="approach-row">
-            <div class="switch-label">
-              <span class="title">Ambulance Emergency Mode</span>
-              <span class="desc" id="ambStatusDesc">Siren ACTIVE • Rapid Clearance Corridor</span>
+          <!-- Upcoming Junction Card on Ambulance HUD -->
+          <div class="junction-hud-card" id="ambJunctionCard" style="margin-bottom: 12px;">
+            <div class="junction-hud-header">
+              <div class="junc-title-box">
+                <span class="junc-hud-tag">UPCOMING JUNCTION (JUNC_01)</span>
+                <span class="junc-hud-name">MG Road & Brigade Rd</span>
+              </div>
+              <span id="ambJuncStatusBadge" class="junc-hud-badge">NORMAL CYCLE</span>
             </div>
-            <label class="toggle-switch">
-              <input type="checkbox" id="emergencyToggle" checked>
-              <span class="slider-switch"></span>
-            </label>
-          </div>
-        </div>
 
-        <!-- Telemetry Cards -->
-        <div class="telemetry-grid">
-          <div class="telemetry-card">
-            <div class="telemetry-icon-box">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 4C7.03 4 3 8.03 3 13c0 2.22.81 4.25 2.16 5.82l1.42-1.42C5.54 16.14 5 14.64 5 13c0-3.87 3.13-7 7-7s7 3.13 7 7c0 1.64-.54 3.14-1.58 4.4l1.42 1.42C20.19 17.25 21 15.22 21 13c0-4.97-4.03-9-9-9zm0 5c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38l4.44-4.44C12.87 9.38 12.45 9 12 9z"/>
-              </svg>
-            </div>
-            <div class="telemetry-data">
-              <div class="tel-label">YOUR SPEED</div>
-              <div class="tel-val"><span id="speedVal">40</span> <span class="tel-unit">km/h</span></div>
-            </div>
-          </div>
-
-          <div class="telemetry-card">
-            <div class="telemetry-icon-box" id="distIconBox">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h2v4h2V8h2v4h2V8h2v4h2V8h2v4h2V8h3v8z"/>
-              </svg>
-            </div>
-            <div class="telemetry-data">
-              <div class="tel-label">AMB. DISTANCE</div>
-              <div class="tel-val"><span id="ambDistVal">—</span> <span class="tel-unit" id="ambDistUnit"></span></div>
+            <div class="junc-hud-body">
+              <div class="junc-mini-signal">
+                <div class="mini-lamp red" id="ambLampRed"></div>
+                <div class="mini-lamp yellow" id="ambLampYellow"></div>
+                <div class="mini-lamp green on" id="ambLampGreen"></div>
+              </div>
+              <div class="junc-hud-details">
+                <div class="junc-metric">
+                  <span class="lbl">AMBULANCE ETA</span>
+                  <span class="val" id="ambJuncEta">—</span>
+                </div>
+                <div class="junc-metric">
+                  <span class="lbl">SIGNAL PRIORITY</span>
+                  <span class="val" id="ambJuncPriority">IDLE</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       <!-- 2. CAMERA & ML LANE ESTIMATION SCREEN -->
+
       <section id="screenCamera" class="screen-view">
         <div class="camera-panel-wrapper">
           <!-- Video / Live Snapshot Box -->
@@ -399,33 +630,34 @@
       <!-- 4. LIVE MAP SCREEN -->
       <section id="screenMap" class="screen-view">
         <div class="map-screen-wrapper">
-          <div id="map"></div>
-
-          <div class="map-floating-controls">
-            <button class="map-control-btn" id="btnCenterAmbulance" title="Recenter on Ambulance">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
-              Center
-            </button>
-            <button class="map-control-btn" id="btnToggleSimPlay">
-              <span id="playIcon">▶</span> <span id="playText">Play</span>
-            </button>
-            <button class="map-control-btn" id="btnResetScenario" title="Reset Demonstration Scenario">
-              ↺ Reset
-            </button>
-          </div>
-
-          <div class="map-legend">
-            <div class="legend-item"><span class="legend-dot" style="background:#EF4444;"></span> Ambulance</div>
-            <div class="legend-item"><span class="legend-dot" style="background:#6366F1;"></span> Vehicles</div>
-            <div class="legend-item"><span class="legend-dot" style="background:#38BDF8;"></span> Route Corridor</div>
-            <div class="legend-item"><span class="legend-dot" style="background:#22C55E;"></span> Junction (JUNC_01)</div>
-          </div>
+          <div id="tabMapSlot" style="height: 100%; width: 100%; position: relative;"></div>
         </div>
       </section>
 
       <!-- 5. SETTINGS & INTEGRATION SCREEN -->
       <section id="screenSettings" class="screen-view">
+        <div class="settings-section-title">MAP & ROUTING CONFIGURATION (OPENSTREETMAP + OSRM)</div>
+        <div class="card">
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+            Interactive mapping is powered by <strong>Leaflet</strong>, <strong>OpenStreetMap</strong> raster tiles, and the <strong>OSRM</strong> road routing engine. No proprietary API key required.
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="settingsTileUrlInput">OpenStreetMap Tile Server URL</label>
+            <input type="text" id="settingsTileUrlInput" class="form-input" value="https://tile.openstreetmap.org/{z}/{x}/{y}.png">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="settingsRoutingUrlInput">Routing Service Base URL (OSRM)</label>
+            <input type="text" id="settingsRoutingUrlInput" class="form-input" value="https://router.project-osrm.org">
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">
+            Attribution: <strong style="color: var(--text-primary);">&copy; OpenStreetMap contributors</strong>
+          </div>
+          <button id="btnSaveMapSettings" class="btn-primary" style="width: 100%;">Apply Map Settings</button>
+          <div id="settingsMapNotice" style="font-size: 11px; margin-top: 6px; color: #4ade80; display: none;">Map settings saved!</div>
+        </div>
+
         <div class="settings-section-title">BACKEND & WEBSOCKET CONNECTION</div>
+
         <div class="card">
           <div class="approach-row" style="margin-bottom: 16px;">
             <div class="switch-label">
@@ -600,9 +832,9 @@
     <div id="toastNotice" class="toast-notice"></div>
   </div>
 
-  <!-- Leaflet Map JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <!-- Application Logic -->
+  <!-- Leaflet Map Engine & Application Logic -->
+  <script src="vendor/leaflet.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
+

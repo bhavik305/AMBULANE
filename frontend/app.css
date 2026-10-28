@@ -65,7 +65,7 @@ html, body {
   backdrop-filter: blur(12px);
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1100;
   border-bottom: 1px solid var(--border);
 }
 
@@ -588,6 +588,49 @@ input:checked + .slider-switch:before {
   background: #111;
 }
 
+.map-telemetry-banner {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 1000;
+  background-color: rgba(24, 24, 27, 0.92);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  max-width: calc(100% - 150px);
+  pointer-events: none;
+}
+
+.status-indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-indicator-dot.live {
+  background-color: #22C55E;
+  box-shadow: 0 0 8px #22C55E;
+}
+
+.status-indicator-dot.waiting {
+  background-color: #EAB308;
+  box-shadow: 0 0 8px #EAB308;
+}
+
+.status-indicator-dot.disconnected {
+  background-color: #EF4444;
+  box-shadow: 0 0 8px #EF4444;
+}
+
 .map-floating-controls {
   position: absolute;
   top: 14px;
@@ -751,7 +794,7 @@ input:checked + .slider-switch:before {
   display: flex;
   align-items: center;
   justify-content: space-around;
-  z-index: 100;
+  z-index: 1100;
 }
 
 .nav-item {
@@ -1228,4 +1271,306 @@ input:checked + .slider-switch:before {
   border-radius: 6px;
   border-left: 3px solid var(--accent-cyan);
 }
+
+/* ==========================================================================
+   OPERATING MODE SELECTOR (PHASE 3)
+   ========================================================================== */
+.mode-selector-banner {
+  display: flex;
+  gap: 10px;
+  padding: 14px 20px 0 20px;
+  margin-bottom: 6px;
+}
+
+.mode-selector-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background-color: var(--surface) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 12px;
+  color: var(--text-secondary) !important;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+  outline: none;
+  font-family: var(--font-family);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.mode-selector-tab:hover {
+  background-color: var(--surface-elevated) !important;
+  border-color: var(--border) !important;
+  color: var(--text-primary) !important;
+}
+
+.mode-selector-tab.active {
+  background-color: var(--surface-elevated) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.25);
+}
+
+.mode-selector-tab[data-mode="AMBULANCE"].active {
+  border-color: #EF4444 !important;
+  background-color: rgba(239, 68, 68, 0.12) !important;
+  color: #FCA5A5 !important;
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.25);
+}
+
+.mode-tab-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.mode-tab-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.mode-tab-title {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: var(--text-primary);
+}
+
+.mode-tab-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+/* Location Autocomplete Suggestions */
+.location-suggestions-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 1050;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.suggestion-item {
+  padding: 8px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: background 0.15s ease;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover, .suggestion-item.highlighted {
+  background: rgba(99, 102, 241, 0.2);
+}
+
+.suggestion-title {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.suggestion-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* Leaflet Dark Theme & Marker Styles */
+.leaflet-container {
+  background-color: #121214 !important;
+  font-family: var(--font-family) !important;
+}
+
+.leaflet-control-attribution {
+  background: rgba(24, 24, 27, 0.88) !important;
+  color: var(--text-muted) !important;
+  font-size: 10px !important;
+  padding: 3px 8px !important;
+  border-radius: 4px;
+}
+
+.leaflet-control-attribution a {
+  color: var(--accent-cyan) !important;
+  text-decoration: none;
+}
+
+.leaflet-bar {
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.leaflet-bar a {
+  background-color: rgba(24, 24, 27, 0.9) !important;
+  color: var(--text-primary) !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+}
+
+.leaflet-bar a:hover {
+  background-color: var(--surface-elevated) !important;
+}
+
+.custom-leaflet-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ==========================================================================
+   AMBULANCE OPERATION PANEL (PHASE 3A)
+   ========================================================================== */
+.amb-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.amb-status-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 99px;
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #F87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.amb-status-badge.active-journey {
+  background-color: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.route-preview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.route-stat-box {
+  background-color: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.route-stat-box .stat-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.route-stat-box .stat-value {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-top: 2px;
+}
+
+.lane-pill-group {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.btn-lane-option {
+  flex: 1;
+  padding: 8px 10px;
+  background-color: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.btn-lane-option:hover {
+  background-color: rgba(56, 189, 248, 0.1);
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
+
+.btn-lane-option.selected {
+  background-color: rgba(56, 189, 248, 0.2);
+  border-color: #38bdf8;
+  color: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+}
+
+.btn-start-journey {
+  background-color: #EF4444;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.2s ease;
+  width: 100%;
+}
+
+.btn-start-journey:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.btn-start-journey:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-stop-journey {
+  background-color: #3F3F46;
+  color: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.btn-stop-journey:hover:not(:disabled) {
+  background-color: #52525B;
+}
+
+.btn-stop-journey:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 
