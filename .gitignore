@@ -27,6 +27,5 @@ Thumbs.db
 *.bin
 .pio/
 
-# Agent IDE files
-.agents/
-skills-lock.json
+# Graphify cache
+graphify-out/cache/

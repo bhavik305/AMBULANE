@@ -1,0 +1,569 @@
+{
+  "backend/ai/__init__.py": {
+    "mtime": 1788873187.670589,
+    "seen": 1793201088.6341343,
+    "ast_hash": "7b2233a69d4b59b654579a0065e0d1e7",
+    "semantic_hash": "7b2233a69d4b59b654579a0065e0d1e7"
+  },
+  "backend/ai/lane_detection.py": {
+    "mtime": 1792722226.296111,
+    "seen": 1793201088.6341343,
+    "ast_hash": "eb5285faa3532535b7de302a516a2acd",
+    "semantic_hash": "eb5285faa3532535b7de302a516a2acd"
+  },
+  "backend/ai/lane_model.py": {
+    "mtime": 1792685215.050134,
+    "seen": 1793201088.6341343,
+    "ast_hash": "7c1b9386305b867db2ceb16217c1d933",
+    "semantic_hash": "7c1b9386305b867db2ceb16217c1d933"
+  },
+  "backend/ai/lane_tracker.py": {
+    "mtime": 1792692128.2495837,
+    "seen": 1793201088.6341343,
+    "ast_hash": "236cfafed1231489e3a75daf2abd610f",
+    "semantic_hash": "236cfafed1231489e3a75daf2abd610f"
+  },
+  "backend/ai/model_def.py": {
+    "mtime": 1792684380.3775918,
+    "seen": 1793201088.6341343,
+    "ast_hash": "d1d6558e84135efefd6b5988fe890d79",
+    "semantic_hash": "d1d6558e84135efefd6b5988fe890d79"
+  },
+  "backend/ai/preprocessing.py": {
+    "mtime": 1791798747.7042086,
+    "seen": 1793201088.6341343,
+    "ast_hash": "81bbcbefa3610678c15c61f5a6162344",
+    "semantic_hash": "81bbcbefa3610678c15c61f5a6162344"
+  },
+  "backend/ai/train_lane_model.py": {
+    "mtime": 1792684253.8003435,
+    "seen": 1793201088.6341343,
+    "ast_hash": "16d5d2c571671cc09f2d3ca57931f15f",
+    "semantic_hash": "16d5d2c571671cc09f2d3ca57931f15f"
+  },
+  "backend/api/__init__.py": {
+    "mtime": 1788873179.027642,
+    "seen": 1793201088.6341343,
+    "ast_hash": "9dc45882cc8d3836b71472c1d9ddf18f",
+    "semantic_hash": "9dc45882cc8d3836b71472c1d9ddf18f"
+  },
+  "backend/api/ambulance.py": {
+    "mtime": 1792675053.8778665,
+    "seen": 1793201088.6341343,
+    "ast_hash": "5ba66ac172a7ca55b0cda1fa75764e04",
+    "semantic_hash": "5ba66ac172a7ca55b0cda1fa75764e04"
+  },
+  "backend/api/camera.py": {
+    "mtime": 1792692061.1623096,
+    "seen": 1793201088.6341343,
+    "ast_hash": "6b59f379ca58ade7cf55411da4e9d70a",
+    "semantic_hash": "6b59f379ca58ade7cf55411da4e9d70a"
+  },
+  "backend/api/demo.py": {
+    "mtime": 1792722511.1105392,
+    "seen": 1793201088.6341343,
+    "ast_hash": "69d6a87d937aeb49ac482e3e4dc6a33d",
+    "semantic_hash": "69d6a87d937aeb49ac482e3e4dc6a33d"
+  },
+  "backend/api/device.py": {
+    "mtime": 1792691938.0519538,
+    "seen": 1793201088.6341343,
+    "ast_hash": "f25f31656550331c7e385ab4cfc27648",
+    "semantic_hash": "f25f31656550331c7e385ab4cfc27648"
+  },
+  "backend/api/journey.py": {
+    "mtime": 1793199367.042454,
+    "seen": 1793201088.6341343,
+    "ast_hash": "d30d2908849d1dad7a9ac7237a7b867f",
+    "semantic_hash": "d30d2908849d1dad7a9ac7237a7b867f"
+  },
+  "backend/api/junction.py": {
+    "mtime": 1793194034.8670323,
+    "seen": 1793201088.6341343,
+    "ast_hash": "7848529b2c7f60ac31a167b4ecd3edf1",
+    "semantic_hash": "7848529b2c7f60ac31a167b4ecd3edf1"
+  },
+  "backend/api/vehicle.py": {
+    "mtime": 1792675076.5328882,
+    "seen": 1793201088.6341343,
+    "ast_hash": "90a05ca12e9c9f3b136e020393b9082b",
+    "semantic_hash": "90a05ca12e9c9f3b136e020393b9082b"
+  },
+  "backend/camera_manager.py": {
+    "mtime": 1792695148.6654375,
+    "seen": 1793201088.6341343,
+    "ast_hash": "2a531473852f2f3bd099645324cf0af8",
+    "semantic_hash": "2a531473852f2f3bd099645324cf0af8"
+  },
+  "backend/demo_fixtures.py": {
+    "mtime": 1792722112.1644516,
+    "seen": 1793201088.6341343,
+    "ast_hash": "87ec144283b87c0bf109f42815ad47bd",
+    "semantic_hash": "87ec144283b87c0bf109f42815ad47bd"
+  },
+  "backend/device_service.py": {
+    "mtime": 1792722294.4531956,
+    "seen": 1793201088.647677,
+    "ast_hash": "cb0dd4d520270b88489a1b381be608c0",
+    "semantic_hash": "cb0dd4d520270b88489a1b381be608c0"
+  },
+  "backend/dispatch_service.py": {
+    "mtime": 1793182941.831039,
+    "seen": 1793201088.647677,
+    "ast_hash": "e867647b6f966f18999e4df05946c096",
+    "semantic_hash": "e867647b6f966f18999e4df05946c096"
+  },
+  "backend/journey_service.py": {
+    "mtime": 1793182884.2151747,
+    "seen": 1793201088.647677,
+    "ast_hash": "6c148c571d70404643d1b6dc3f2ce914",
+    "semantic_hash": "6c148c571d70404643d1b6dc3f2ce914"
+  },
+  "backend/junction_service.py": {
+    "mtime": 1792692338.0222597,
+    "seen": 1793201088.647677,
+    "ast_hash": "ea172648eb85fc8bf5ad0589b8808701",
+    "semantic_hash": "ea172648eb85fc8bf5ad0589b8808701"
+  },
+  "backend/main.py": {
+    "mtime": 1793182911.4486766,
+    "seen": 1793201088.647677,
+    "ast_hash": "8576303b09886923309d422516ee12a5",
+    "semantic_hash": "8576303b09886923309d422516ee12a5"
+  },
+  "backend/matching_engine.py": {
+    "mtime": 1793183230.1154804,
+    "seen": 1793201088.647677,
+    "ast_hash": "4eae8e592b2c6a24d15c773338fa38a5",
+    "semantic_hash": "4eae8e592b2c6a24d15c773338fa38a5"
+  },
+  "backend/models.py": {
+    "mtime": 1793182864.0801551,
+    "seen": 1793201088.647677,
+    "ast_hash": "2559725c40d0069afe77cba3081b2257",
+    "semantic_hash": "2559725c40d0069afe77cba3081b2257"
+  },
+  "backend/route_engine.py": {
+    "mtime": 1791801256.0710287,
+    "seen": 1793201088.647677,
+    "ast_hash": "6eb490700f8817434b02114c898f738b",
+    "semantic_hash": "6eb490700f8817434b02114c898f738b"
+  },
+  "backend/simulate.py": {
+    "mtime": 1791801479.0076456,
+    "seen": 1793201088.647677,
+    "ast_hash": "277b202148c6366e7497625fec7a7b00",
+    "semantic_hash": "277b202148c6366e7497625fec7a7b00"
+  },
+  "backend/test_ambulance_ws.py": {
+    "mtime": 1791801448.662611,
+    "seen": 1793201088.647677,
+    "ast_hash": "9ed0217ad854e925ea67d5e6815a1e4a",
+    "semantic_hash": "9ed0217ad854e925ea67d5e6815a1e4a"
+  },
+  "backend/test_camera_ml_junction.py": {
+    "mtime": 1792691314.6959867,
+    "seen": 1793201088.647677,
+    "ast_hash": "bc32e698418d69647db99c5c1d5fd1a8",
+    "semantic_hash": "bc32e698418d69647db99c5c1d5fd1a8"
+  },
+  "backend/test_esp32_firmware_simulation.py": {
+    "mtime": 1791801301.2870488,
+    "seen": 1793201088.647677,
+    "ast_hash": "961bcc148a40d12064358f5fdd001079",
+    "semantic_hash": "961bcc148a40d12064358f5fdd001079"
+  },
+  "backend/test_evas_full_integration.py": {
+    "mtime": 1793197216.4889412,
+    "seen": 1793201088.647677,
+    "ast_hash": "32745cadfd127bcd10014e112ad781c2",
+    "semantic_hash": "32745cadfd127bcd10014e112ad781c2"
+  },
+  "backend/test_final_audit_suite.py": {
+    "mtime": 1792722618.6645882,
+    "seen": 1793201088.647677,
+    "ast_hash": "650091f12f5c8380717b49d9e13087ae",
+    "semantic_hash": "650091f12f5c8380717b49d9e13087ae"
+  },
+  "backend/test_frontend_integration.py": {
+    "mtime": 1792678608.0590198,
+    "seen": 1793201088.654578,
+    "ast_hash": "a3bbdc93ea86fb84d227f9e0a794b7df",
+    "semantic_hash": "a3bbdc93ea86fb84d227f9e0a794b7df"
+  },
+  "backend/test_lane_matching_cases.py": {
+    "mtime": 1793199367.1628993,
+    "seen": 1793201088.654578,
+    "ast_hash": "4377d579d802e47dc250a3b6b742f651",
+    "semantic_hash": "4377d579d802e47dc250a3b6b742f651"
+  },
+  "backend/test_phone_ambulance.py": {
+    "mtime": 1791801465.910839,
+    "seen": 1793201088.654578,
+    "ast_hash": "5e01e6d0c27a99085d8f0229cee41b03",
+    "semantic_hash": "5e01e6d0c27a99085d8f0229cee41b03"
+  },
+  "backend/test_step4_validation.py": {
+    "mtime": 1791796725.6001208,
+    "seen": 1793201088.654578,
+    "ast_hash": "b67881e16c9ca06947836ddd2c4cb509",
+    "semantic_hash": "b67881e16c9ca06947836ddd2c4cb509"
+  },
+  "backend/test_step5_route_engine.py": {
+    "mtime": 1791805170.752973,
+    "seen": 1793201088.654578,
+    "ast_hash": "a9fe4291655fd9800d56be753b44ea1a",
+    "semantic_hash": "a9fe4291655fd9800d56be753b44ea1a"
+  },
+  "backend/test_step6_matching_engine.py": {
+    "mtime": 1791801336.0715685,
+    "seen": 1793201088.654578,
+    "ast_hash": "a427bdbf93b9194454b5cb3852d51327",
+    "semantic_hash": "a427bdbf93b9194454b5cb3852d51327"
+  },
+  "backend/test_step7_camera.py": {
+    "mtime": 1791798469.6497614,
+    "seen": 1793201088.654578,
+    "ast_hash": "7f586fcf565703c1185af5e619939f7b",
+    "semantic_hash": "7f586fcf565703c1185af5e619939f7b"
+  },
+  "backend/test_step8_lane_detection.py": {
+    "mtime": 1792722667.8378618,
+    "seen": 1793201088.654578,
+    "ast_hash": "994058d1e001ac0733b0dcaf4de81032",
+    "semantic_hash": "994058d1e001ac0733b0dcaf4de81032"
+  },
+  "backend/websocket_manager.py": {
+    "mtime": 1791801271.4717875,
+    "seen": 1793201088.654578,
+    "ast_hash": "dafe442099eb36dd4b11eec727c5362f",
+    "semantic_hash": "dafe442099eb36dd4b11eec727c5362f"
+  },
+  "frontend/ambulance/ambulance.js": {
+    "mtime": 1789109273.4188447,
+    "seen": 1793201088.654578,
+    "ast_hash": "598031d3d1db9726f7b763320b94d484",
+    "semantic_hash": "598031d3d1db9726f7b763320b94d484"
+  },
+  "frontend/ambulance/manifest.json": {
+    "mtime": 1789109282.3718495,
+    "seen": 1793201088.654578,
+    "ast_hash": "e3a4d87f55a05ddccefd3aa9fc1fc4aa",
+    "semantic_hash": "e3a4d87f55a05ddccefd3aa9fc1fc4aa"
+  },
+  "frontend/analysis_options.yaml": {
+    "mtime": 1792671520.6569946,
+    "seen": 1793201088.654578,
+    "ast_hash": "106c9c216a72e19a4fd5711203005ced",
+    "semantic_hash": "106c9c216a72e19a4fd5711203005ced"
+  },
+  "frontend/android/app/build.gradle.kts": {
+    "mtime": 1792671520.6606421,
+    "seen": 1793201088.654578,
+    "ast_hash": "ecc6f979ea791fefcd4baee8155a5e24",
+    "semantic_hash": "ecc6f979ea791fefcd4baee8155a5e24"
+  },
+  "frontend/android/app/src/main/kotlin/com/evas/laneaware/evas_app/MainActivity.kt": {
+    "mtime": 1792671520.6787534,
+    "seen": 1793201088.654578,
+    "ast_hash": "2259a091a31190cd7c94cc3d5629e0ba",
+    "semantic_hash": "2259a091a31190cd7c94cc3d5629e0ba"
+  },
+  "frontend/android/build.gradle.kts": {
+    "mtime": 1792671520.7073438,
+    "seen": 1793201088.654578,
+    "ast_hash": "803fe22651fbe96ed401eb0b66a492d1",
+    "semantic_hash": "803fe22651fbe96ed401eb0b66a492d1"
+  },
+  "frontend/android/settings.gradle.kts": {
+    "mtime": 1792671520.7139049,
+    "seen": 1793201088.654578,
+    "ast_hash": "a34513cd87cef855195771f6a457a218",
+    "semantic_hash": "a34513cd87cef855195771f6a457a218"
+  },
+  "frontend/app.js": {
+    "mtime": 1793197137.9321585,
+    "seen": 1793201088.654578,
+    "ast_hash": "5dd292d4596aaab621d3123f7b151e2c",
+    "semantic_hash": "5dd292d4596aaab621d3123f7b151e2c"
+  },
+  "frontend/ios/RunnerTests/RunnerTests.swift": {
+    "mtime": 1792671520.7739677,
+    "seen": 1793201088.654578,
+    "ast_hash": "24e5d095048eb86c30423f4e04b6e57b",
+    "semantic_hash": "24e5d095048eb86c30423f4e04b6e57b"
+  },
+  "frontend/ios/Runner/AppDelegate.swift": {
+    "mtime": 1792671520.741442,
+    "seen": 1793201088.654578,
+    "ast_hash": "9e1de9c329a3fe4931876063de95132b",
+    "semantic_hash": "9e1de9c329a3fe4931876063de95132b"
+  },
+  "frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json": {
+    "mtime": 1792671520.741442,
+    "seen": 1793201088.654578,
+    "ast_hash": "31a08e429403e265cabfb31b3d65f049",
+    "semantic_hash": "31a08e429403e265cabfb31b3d65f049",
+    "ast_empty": true
+  },
+  "frontend/ios/Runner/Assets.xcassets/LaunchImage.imageset/Contents.json": {
+    "mtime": 1792671520.763237,
+    "seen": 1793201088.654578,
+    "ast_hash": "b9e927ac17345f2d5f052fe68a3487f9",
+    "semantic_hash": "b9e927ac17345f2d5f052fe68a3487f9",
+    "ast_empty": true
+  },
+  "frontend/ios/Runner/Runner-Bridging-Header.h": {
+    "mtime": 1792671520.764988,
+    "seen": 1793201088.654578,
+    "ast_hash": "7ad7b5cea096132de13ba526b2b9efbe",
+    "semantic_hash": "7ad7b5cea096132de13ba526b2b9efbe"
+  },
+  "frontend/ios/Runner/SceneDelegate.swift": {
+    "mtime": 1792671520.764988,
+    "seen": 1793201088.654578,
+    "ast_hash": "0c3e86af131f6a9e547c80b5ed058914",
+    "semantic_hash": "0c3e86af131f6a9e547c80b5ed058914"
+  },
+  "frontend/lib/core/constants/colors.dart": {
+    "mtime": 1792671520.7774913,
+    "seen": 1793201088.654578,
+    "ast_hash": "2246051d7004b8a826127f753efc0387",
+    "semantic_hash": "2246051d7004b8a826127f753efc0387"
+  },
+  "frontend/lib/core/models/emergency_alert.dart": {
+    "mtime": 1792678283.101309,
+    "seen": 1793201088.654578,
+    "ast_hash": "78877de046f7c5de110ef4e5b61488c6",
+    "semantic_hash": "78877de046f7c5de110ef4e5b61488c6"
+  },
+  "frontend/lib/core/models/vehicle_node.dart": {
+    "mtime": 1792671520.7774913,
+    "seen": 1793201088.654578,
+    "ast_hash": "f5627cc0be9184bd228086e4a1f70ffd",
+    "semantic_hash": "f5627cc0be9184bd228086e4a1f70ffd"
+  },
+  "frontend/lib/core/services/alert_sound_service.dart": {
+    "mtime": 1792671520.7819285,
+    "seen": 1793201088.654578,
+    "ast_hash": "83a74121d490ade5c818a8e873d598b6",
+    "semantic_hash": "83a74121d490ade5c818a8e873d598b6"
+  },
+  "frontend/lib/core/services/location_service.dart": {
+    "mtime": 1792671520.7819285,
+    "seen": 1793201088.654578,
+    "ast_hash": "42b5ae6d18484e9d062101cd3b81f965",
+    "semantic_hash": "42b5ae6d18484e9d062101cd3b81f965"
+  },
+  "frontend/lib/core/services/simulation_engine.dart": {
+    "mtime": 1792671520.7819285,
+    "seen": 1793201088.654578,
+    "ast_hash": "e5cb48cf6694b3a9fc4f96789853cfb2",
+    "semantic_hash": "e5cb48cf6694b3a9fc4f96789853cfb2"
+  },
+  "frontend/lib/core/services/websocket_service.dart": {
+    "mtime": 1792678253.863104,
+    "seen": 1793201088.654578,
+    "ast_hash": "6d521e5d86b63f76fe61b3eeec422008",
+    "semantic_hash": "6d521e5d86b63f76fe61b3eeec422008"
+  },
+  "frontend/lib/main.dart": {
+    "mtime": 1792671520.7819285,
+    "seen": 1793201088.654578,
+    "ast_hash": "c760ccb255c98e6f844e6757adaeb674",
+    "semantic_hash": "c760ccb255c98e6f844e6757adaeb674"
+  },
+  "frontend/lib/presentation/screens/driver_hud_screen.dart": {
+    "mtime": 1792671520.7819285,
+    "seen": 1793201088.654578,
+    "ast_hash": "08398c01c0781189ce59f764358a6c73",
+    "semantic_hash": "08398c01c0781189ce59f764358a6c73"
+  },
+  "frontend/lib/presentation/screens/operator_map_screen.dart": {
+    "mtime": 1792671520.7902622,
+    "seen": 1793201088.654578,
+    "ast_hash": "b1b3af7f3bdf3815dc22fc1c20276313",
+    "semantic_hash": "b1b3af7f3bdf3815dc22fc1c20276313"
+  },
+  "frontend/lib/presentation/screens/settings_screen.dart": {
+    "mtime": 1792671520.7902622,
+    "seen": 1793201088.654578,
+    "ast_hash": "2239afbd5e42239f380414257fe1682c",
+    "semantic_hash": "2239afbd5e42239f380414257fe1682c"
+  },
+  "frontend/lib/presentation/widgets/alert_banner_widget.dart": {
+    "mtime": 1792671520.7902622,
+    "seen": 1793201088.654578,
+    "ast_hash": "dc7d23c0db09ca327123d7b29d2fb94b",
+    "semantic_hash": "dc7d23c0db09ca327123d7b29d2fb94b"
+  },
+  "frontend/lib/presentation/widgets/lane_indicator_widget.dart": {
+    "mtime": 1792671520.7902622,
+    "seen": 1793201088.654578,
+    "ast_hash": "a00009cd2697f357875276b37616aa81",
+    "semantic_hash": "a00009cd2697f357875276b37616aa81"
+  },
+  "frontend/lib/presentation/widgets/telemetry_card.dart": {
+    "mtime": 1792671520.7902622,
+    "seen": 1793201088.67035,
+    "ast_hash": "811ab5b7dc45e2cc416837feada64812",
+    "semantic_hash": "811ab5b7dc45e2cc416837feada64812"
+  },
+  "frontend/lib/state/app_state.dart": {
+    "mtime": 1792678361.228263,
+    "seen": 1793201088.67035,
+    "ast_hash": "f62c9291577ac02e7a29878a8c868c23",
+    "semantic_hash": "f62c9291577ac02e7a29878a8c868c23"
+  },
+  "frontend/linux/flutter/generated_plugin_registrant.cc": {
+    "mtime": 1792671520.7967885,
+    "seen": 1793201088.67035,
+    "ast_hash": "2e63d960a5be012ffc31e28865de94f7",
+    "semantic_hash": "2e63d960a5be012ffc31e28865de94f7"
+  },
+  "frontend/linux/flutter/generated_plugin_registrant.h": {
+    "mtime": 1792671520.7967885,
+    "seen": 1793201088.67035,
+    "ast_hash": "0208db974972d7b29a0ac368be83644b",
+    "semantic_hash": "0208db974972d7b29a0ac368be83644b"
+  },
+  "frontend/linux/runner/main.cc": {
+    "mtime": 1792671520.7967885,
+    "seen": 1793201088.67035,
+    "ast_hash": "539395bcd63dba20afed0838d136189f",
+    "semantic_hash": "539395bcd63dba20afed0838d136189f"
+  },
+  "frontend/linux/runner/my_application.cc": {
+    "mtime": 1792671520.7967885,
+    "seen": 1793201088.67035,
+    "ast_hash": "67bc0985d00c156e710007f7a79f15ed",
+    "semantic_hash": "67bc0985d00c156e710007f7a79f15ed"
+  },
+  "frontend/linux/runner/my_application.h": {
+    "mtime": 1792671520.7967885,
+    "seen": 1793201088.6729636,
+    "ast_hash": "ffa1a7c0a2ad45a2c14a921596516ff8",
+    "semantic_hash": "ffa1a7c0a2ad45a2c14a921596516ff8"
+  },
+  "frontend/macos/Flutter/GeneratedPluginRegistrant.swift": {
+    "mtime": 1792671520.8145,
+    "seen": 1793201088.6729636,
+    "ast_hash": "ed813804e71d0fd446ae62e6bcc826a2",
+    "semantic_hash": "ed813804e71d0fd446ae62e6bcc826a2"
+  },
+  "frontend/macos/RunnerTests/RunnerTests.swift": {
+    "mtime": 1792671520.8464267,
+    "seen": 1793201088.6729636,
+    "ast_hash": "8059f5d27a19c556eeafb49b3f9b7bdd",
+    "semantic_hash": "8059f5d27a19c556eeafb49b3f9b7bdd"
+  },
+  "frontend/macos/Runner/AppDelegate.swift": {
+    "mtime": 1792671520.8291688,
+    "seen": 1793201088.6729636,
+    "ast_hash": "4b52e0b89ebfef9baf45b04548c463d6",
+    "semantic_hash": "4b52e0b89ebfef9baf45b04548c463d6"
+  },
+  "frontend/macos/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json": {
+    "mtime": 1792671520.8320515,
+    "seen": 1793201088.67476,
+    "ast_hash": "1d48e925145d4b573a3b5d7960a1c585",
+    "semantic_hash": "1d48e925145d4b573a3b5d7960a1c585",
+    "ast_empty": true
+  },
+  "frontend/macos/Runner/MainFlutterWindow.swift": {
+    "mtime": 1792671520.8464267,
+    "seen": 1793201088.67476,
+    "ast_hash": "93c22dae2d93f3dc1402e121901f582b",
+    "semantic_hash": "93c22dae2d93f3dc1402e121901f582b"
+  },
+  "frontend/pubspec.yaml": {
+    "mtime": 1792671520.8464267,
+    "seen": 1793201088.6754508,
+    "ast_hash": "551a43de248a9f206450569b87831d2f",
+    "semantic_hash": "551a43de248a9f206450569b87831d2f"
+  },
+  "frontend/test/widget_test.dart": {
+    "mtime": 1792671520.8464267,
+    "seen": 1793201088.6754508,
+    "ast_hash": "bea9412f4cce211cdb90c19db595c7c2",
+    "semantic_hash": "bea9412f4cce211cdb90c19db595c7c2"
+  },
+  "frontend/vendor/leaflet.js": {
+    "mtime": 1793193166.7559156,
+    "seen": 1793201088.6754508,
+    "ast_hash": "35b48eb991f383702f153452506e07b2",
+    "semantic_hash": "35b48eb991f383702f153452506e07b2"
+  },
+  "frontend/web/manifest.json": {
+    "mtime": 1792671520.8601737,
+    "seen": 1793201088.6754508,
+    "ast_hash": "4830e451673c1509cc0bdfdf5b385aed",
+    "semantic_hash": "4830e451673c1509cc0bdfdf5b385aed"
+  },
+  "frontend/windows/flutter/generated_plugin_registrant.cc": {
+    "mtime": 1792671520.8699691,
+    "seen": 1793201088.6754508,
+    "ast_hash": "97ac42ac7d25f605105ffb98eb3d1428",
+    "semantic_hash": "97ac42ac7d25f605105ffb98eb3d1428"
+  },
+  "frontend/windows/flutter/generated_plugin_registrant.h": {
+    "mtime": 1792671520.8758583,
+    "seen": 1793201088.6754508,
+    "ast_hash": "0c3df6700414e7f332dfa2582a1ae29e",
+    "semantic_hash": "0c3df6700414e7f332dfa2582a1ae29e"
+  },
+  "frontend/windows/runner/flutter_window.cpp": {
+    "mtime": 1792671520.8803933,
+    "seen": 1793201088.6754508,
+    "ast_hash": "2f463f9b7da67a2d692a012f9ea85e0c",
+    "semantic_hash": "2f463f9b7da67a2d692a012f9ea85e0c"
+  },
+  "frontend/windows/runner/flutter_window.h": {
+    "mtime": 1792671520.8803933,
+    "seen": 1793201088.6754508,
+    "ast_hash": "7defcc89d4a26d56e801241d624d48fb",
+    "semantic_hash": "7defcc89d4a26d56e801241d624d48fb"
+  },
+  "frontend/windows/runner/main.cpp": {
+    "mtime": 1792671520.8803933,
+    "seen": 1793201088.6754508,
+    "ast_hash": "f96d31dc70f96122b23a86eae408a18d",
+    "semantic_hash": "f96d31dc70f96122b23a86eae408a18d"
+  },
+  "frontend/windows/runner/resource.h": {
+    "mtime": 1792671520.8803933,
+    "seen": 1793201088.683006,
+    "ast_hash": "1ade5dd15e613479a15e8832ed276f2b",
+    "semantic_hash": "1ade5dd15e613479a15e8832ed276f2b"
+  },
+  "frontend/windows/runner/utils.cpp": {
+    "mtime": 1792671520.8803933,
+    "seen": 1793201088.6845272,
+    "ast_hash": "e18900a4c2c2962ad732d3b83f0396b9",
+    "semantic_hash": "e18900a4c2c2962ad732d3b83f0396b9"
+  },
+  "frontend/windows/runner/utils.h": {
+    "mtime": 1792671520.8803933,
+    "seen": 1793201088.6849384,
+    "ast_hash": "fd81e143f5614eb6fd75efe539002853",
+    "semantic_hash": "fd81e143f5614eb6fd75efe539002853"
+  },
+  "frontend/windows/runner/win32_window.cpp": {
+    "mtime": 1792671520.8803933,
+    "seen": 1793201088.6856048,
+    "ast_hash": "571eb8234dbc2661be03aa5f2a4d2fca",
+    "semantic_hash": "571eb8234dbc2661be03aa5f2a4d2fca"
+  },
+  "frontend/windows/runner/win32_window.h": {
+    "mtime": 1792671520.8803933,
+    "seen": 1793201088.6856048,
+    "ast_hash": "7569387d58711ab975940f4df3b4bcda",
+    "semantic_hash": "7569387d58711ab975940f4df3b4bcda"
+  },
+  "backend/data/road_sample.mp4": {
+    "mtime": 1792688255.3689148,
+    "seen": 1793201088.6856048,
+    "ast_hash": "250e19046e3a36fcbb903b891cf9a816",
+    "semantic_hash": "250e19046e3a36fcbb903b891cf9a816"
+  }
+}
