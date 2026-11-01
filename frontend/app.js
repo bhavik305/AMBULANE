@@ -553,8 +553,8 @@
         lng: lng,
         speed_kmh: (state.speedKmh !== null && state.speedKmh !== undefined) ? state.speedKmh : 0.0,
         heading_deg: state.headingDeg || 0.0,
-        lane: String(state.myLane),
-        lane_confidence: (state.camera && state.camera.confidence !== null) ? state.camera.confidence : 0.95,
+        lane: (state.camera && state.camera.lane && state.camera.lane !== 'UNKNOWN') ? state.camera.lane : (state.myLane ? String(state.myLane) : null),
+        lane_confidence: (state.camera && state.camera.confidence !== null && state.camera.confidence !== undefined) ? state.camera.confidence : null,
         ts: Date.now() / 1000.0
       };
     }
@@ -813,8 +813,19 @@
       }
     }
     if ($('hudCamStatus')) {
-      $('hudCamStatus').textContent = state.cameraEnabled ? 'CONNECTED (PHOTO 5s)' : 'STANDBY';
-      $('hudCamStatus').style.color = state.cameraEnabled ? '#4ADE80' : 'var(--text-muted)';
+      const cStatus = (typeof phoneCameraStatus !== 'undefined' && phoneCameraStatus)
+        ? phoneCameraStatus
+        : (state.cameraEnabled ? 'CAMERA READY' : 'CAMERA OFF');
+      $('hudCamStatus').textContent = cStatus;
+      if (cStatus === 'LANE DETECTED' || cStatus === 'CAMERA READY') {
+        $('hudCamStatus').style.color = '#4ADE80';
+      } else if (cStatus === 'CAPTURING STILL IMAGE' || cStatus === 'ANALYSING IMAGE' || cStatus === 'REQUESTING PERMISSION') {
+        $('hudCamStatus').style.color = '#38BDF8';
+      } else if (cStatus === 'CAMERA UNAVAILABLE' || cStatus === 'ANALYSIS FAILED') {
+        $('hudCamStatus').style.color = '#F87171';
+      } else {
+        $('hudCamStatus').style.color = 'var(--text-muted)';
+      }
     }
     if ($('hudConnStatus')) {
       $('hudConnStatus').textContent = state.wsConnected ? 'WEBSOCKET ONLINE' : 'DISCONNECTED';
@@ -971,118 +982,345 @@
     }
   }
 
-  // --- Camera AI Telemetry & Stream Ingestion ---
-  let cameraPollTimer = null;
+  // --- Phone-Based Camera AI Ingestion (Strict 5s Still-Photo Capture) ---
+  let phoneMediaStream = null;
+  let phoneCaptureIntervalTimer = null;
+  let isCapturingStill = false;
+  let phoneCameraStatus = 'CAMERA OFF';
+
+  function setPhoneCameraStatus(newStatus, detail) {
+    phoneCameraStatus = newStatus;
+    const isReady = (
+      newStatus === 'CAMERA READY' ||
+      newStatus === 'CAPTURING STILL IMAGE' ||
+      newStatus === 'ANALYSING IMAGE' ||
+      newStatus === 'LANE DETECTED'
+    );
+    state.cameraEnabled = isReady;
+
+    if ($('hudCamStatus')) {
+      $('hudCamStatus').textContent = newStatus;
+      if (newStatus === 'LANE DETECTED' || newStatus === 'CAMERA READY') {
+        $('hudCamStatus').style.color = '#4ADE80';
+      } else if (newStatus === 'CAPTURING STILL IMAGE' || newStatus === 'ANALYSING IMAGE' || newStatus === 'REQUESTING PERMISSION') {
+        $('hudCamStatus').style.color = '#38BDF8';
+      } else if (newStatus === 'CAMERA UNAVAILABLE' || newStatus === 'ANALYSIS FAILED') {
+        $('hudCamStatus').style.color = '#F87171';
+      } else {
+        $('hudCamStatus').style.color = 'var(--text-muted)';
+      }
+    }
+
+    if ($('cameraAccessPill')) {
+      $('cameraAccessPill').textContent = `ACCESS: ${newStatus}`;
+      if (isReady) {
+        $('cameraAccessPill').style.background = 'rgba(34, 197, 94, 0.2)';
+        $('cameraAccessPill').style.color = '#4ade80';
+        $('cameraAccessPill').style.borderColor = 'rgba(34, 197, 94, 0.4)';
+      } else if (newStatus === 'CAMERA UNAVAILABLE' || newStatus === 'ANALYSIS FAILED') {
+        $('cameraAccessPill').style.background = 'rgba(239, 68, 68, 0.2)';
+        $('cameraAccessPill').style.color = '#f87171';
+        $('cameraAccessPill').style.borderColor = 'rgba(239, 68, 68, 0.4)';
+      } else {
+        $('cameraAccessPill').style.background = 'rgba(239, 68, 68, 0.2)';
+        $('cameraAccessPill').style.color = '#f87171';
+        $('cameraAccessPill').style.borderColor = 'rgba(239, 68, 68, 0.4)';
+      }
+    }
+
+    if ($('btnCameraTurnOn') && $('btnCameraTurnOff')) {
+      if (isReady) {
+        $('btnCameraTurnOn').classList.add('active');
+        $('btnCameraTurnOff').classList.remove('active');
+      } else {
+        $('btnCameraTurnOff').classList.add('active');
+        $('btnCameraTurnOn').classList.remove('active');
+      }
+    }
+
+    if ($('cameraAccessStatusText')) {
+      if (newStatus === 'CAMERA OFF') {
+        $('cameraAccessStatusText').innerHTML = 'Camera access is <strong>CAMERA OFF</strong>. Phone rear camera hardware is released.';
+      } else if (newStatus === 'REQUESTING PERMISSION') {
+        $('cameraAccessStatusText').innerHTML = '<strong>REQUESTING PERMISSION:</strong> Please allow rear camera and location access in your browser.';
+      } else if (newStatus === 'CAMERA UNAVAILABLE') {
+        $('cameraAccessStatusText').innerHTML = `<span style="color: #f87171;"><strong>CAMERA UNAVAILABLE:</strong> ${detail || 'Camera hardware could not be opened.'}</span>`;
+      } else if (newStatus === 'ANALYSIS FAILED') {
+        $('cameraAccessStatusText').innerHTML = `<span style="color: #f87171;"><strong>ANALYSIS FAILED:</strong> ${detail || 'Backend image analysis failed.'}</span>`;
+      } else {
+        $('cameraAccessStatusText').innerHTML = `Smartphone rear camera captures <strong>1 still photo every 5s</strong>. Video recording/streaming is strictly disabled.`;
+      }
+    }
+
+    if ($('cameraSourceBadge')) {
+      $('cameraSourceBadge').textContent = isReady ? 'PHONE REAR CAMERA' : 'CAMERA OFF';
+    }
+
+    if ($('cameraFpsPill')) {
+      $('cameraFpsPill').textContent = isReady ? 'STILL PHOTO (5s)' : 'OFF';
+    }
+
+    if ($('camCaptureStatus')) {
+      $('camCaptureStatus').textContent = newStatus;
+      if (isReady) {
+        $('camCaptureStatus').style.color = 'var(--safe)';
+      } else if (newStatus === 'CAMERA UNAVAILABLE' || newStatus === 'ANALYSIS FAILED') {
+        $('camCaptureStatus').style.color = 'var(--danger)';
+      } else {
+        $('camCaptureStatus').style.color = 'var(--text-muted)';
+      }
+    }
+  }
+
+  async function startPhoneCamera() {
+    if (state.operatingMode === 'AMBULANCE') {
+      console.log('Ambulance mode does not require camera access.');
+      return;
+    }
+
+    if (phoneMediaStream) {
+      setPhoneCameraStatus('CAMERA READY');
+      return;
+    }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setPhoneCameraStatus('CAMERA UNAVAILABLE', 'Browser getUserMedia API not supported');
+      showToast('Camera API not supported in this browser.');
+      return;
+    }
+
+    setPhoneCameraStatus('REQUESTING PERMISSION');
+    showToast('Requesting smartphone rear-camera permission...');
+
+    try {
+      const constraints = {
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 640 },
+          height: { ideal: 480 }
+        },
+        audio: false
+      };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      phoneMediaStream = stream;
+
+      const videoEl = $('phoneCameraVideo');
+      if (videoEl) {
+        videoEl.srcObject = stream;
+        videoEl.play().catch(() => {});
+      }
+
+      setPhoneCameraStatus('CAMERA READY');
+      showToast('Rear camera connected! Starting 5-second still capture...');
+
+      // Notify backend that camera is active
+      fetch('/api/camera/access', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: true, vehicle_id: state.myVehicleId, source: 'smartphone_rear_camera' })
+      }).catch(() => {});
+
+      // Take initial still photo capture after video stream settles
+      setTimeout(() => {
+        captureAndAnalyzeStillPhoto();
+      }, 700);
+
+      // Start strict 5-second capture interval
+      if (phoneCaptureIntervalTimer) clearInterval(phoneCaptureIntervalTimer);
+      phoneCaptureIntervalTimer = setInterval(() => {
+        if (state.cameraEnabled && phoneMediaStream && state.operatingMode === 'NORMAL_VEHICLE') {
+          captureAndAnalyzeStillPhoto();
+        }
+      }, 5000);
+
+    } catch (err) {
+      console.warn('Phone camera getUserMedia error:', err);
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setPhoneCameraStatus('CAMERA UNAVAILABLE', 'Permission denied by user. Allow camera in browser settings.');
+        showToast('Camera permission denied.');
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        setPhoneCameraStatus('CAMERA UNAVAILABLE', 'No rear camera found on device.');
+        showToast('No camera hardware found.');
+      } else {
+        setPhoneCameraStatus('CAMERA UNAVAILABLE', err.message || 'Camera acquisition failed.');
+        showToast('Camera error: ' + (err.message || err.name));
+      }
+    }
+  }
+
+  function stopPhoneCamera() {
+    if (phoneCaptureIntervalTimer) {
+      clearInterval(phoneCaptureIntervalTimer);
+      phoneCaptureIntervalTimer = null;
+    }
+
+    if (phoneMediaStream) {
+      phoneMediaStream.getTracks().forEach(track => {
+        try { track.stop(); } catch (e) {}
+      });
+      phoneMediaStream = null;
+    }
+
+    const videoEl = $('phoneCameraVideo');
+    if (videoEl) {
+      videoEl.srcObject = null;
+    }
+
+    setPhoneCameraStatus('CAMERA OFF');
+
+    // Notify backend
+    fetch('/api/camera/access', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled: false, vehicle_id: state.myVehicleId })
+    }).catch(() => {});
+  }
+
+  async function captureAndAnalyzeStillPhoto() {
+    if (isCapturingStill) {
+      // Avoid overlapping requests
+      return;
+    }
+
+    if (!phoneMediaStream) {
+      return;
+    }
+
+    const videoEl = $('phoneCameraVideo');
+    const canvas = $('phoneCameraCanvas') || document.createElement('canvas');
+
+    if (!videoEl || videoEl.readyState < 2) {
+      // Video not ready yet
+      return;
+    }
+
+    isCapturingStill = true;
+    setPhoneCameraStatus('CAPTURING STILL IMAGE');
+
+    try {
+      const w = videoEl.videoWidth || 640;
+      const h = videoEl.videoHeight || 480;
+      canvas.width = w;
+      canvas.height = h;
+
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(videoEl, 0, 0, w, h);
+
+      // Convert to JPEG blob
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+      if (!blob) {
+        throw new Error('Canvas blob conversion failed');
+      }
+
+      setPhoneCameraStatus('ANALYSING IMAGE');
+
+      const formData = new FormData();
+      formData.append('file', blob, 'still_frame.jpg');
+
+      // Include GPS coordinates if available
+      let queryParams = '';
+      if (state.myPosition && isValidCoordinate(state.myPosition.lat, state.myPosition.lng)) {
+        queryParams = `?lat=${state.myPosition.lat}&lng=${state.myPosition.lng}`;
+        if (state.myPosition.heading !== null && state.myPosition.heading !== undefined) {
+          queryParams += `&heading_deg=${state.myPosition.heading}`;
+        }
+        if (state.myPosition.speed !== null && state.myPosition.speed !== undefined) {
+          queryParams += `&speed_kmh=${state.myPosition.speed}`;
+        }
+      }
+
+      const uploadUrl = `/api/camera/frame/${encodeURIComponent(state.myVehicleId)}${queryParams}`;
+      const res = await fetch(uploadUrl, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.detail || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      const resObj = data.result;
+
+      if (resObj && resObj.lane) {
+        setPhoneCameraStatus('LANE DETECTED');
+
+        // Update state
+        state.camera.lane = resObj.lane;
+        state.camera.confidence = resObj.lane_confidence;
+        state.camera.totalLanes = resObj.total_lanes;
+        state.camera.directionLanes = resObj.direction_lanes;
+        state.camera.roadName = resObj.road_name;
+        state.camera.dataSource = resObj.data_source;
+        state.camera.latencyMs = resObj.processing_time_ms;
+
+        // Update HUD
+        if ($('camLaneVal')) {
+          const hasLane = resObj.lane !== 'UNKNOWN';
+          $('camLaneVal').textContent = hasLane ? resObj.lane : 'UNKNOWN (Insufficient Visibility)';
+          $('camLaneVal').style.color = hasLane ? (resObj.lane === 'CENTER' ? 'var(--safe)' : 'var(--warning)') : 'var(--text-muted)';
+        }
+        if ($('camConfVal')) {
+          $('camConfVal').textContent = resObj.lane_confidence ? `${Math.round(resObj.lane_confidence * 100)}%` : '—';
+        }
+        if ($('camTotalLanesVal')) {
+          $('camTotalLanesVal').textContent = resObj.total_lanes ? `${resObj.total_lanes} (${resObj.direction_lanes ? resObj.direction_lanes + ' Fwd' : ''})` : 'Not in OSM';
+        }
+        if ($('camSourceVal')) {
+          $('camSourceVal').textContent = resObj.data_source;
+        }
+        if ($('camRoadNameVal')) {
+          $('camRoadNameVal').textContent = resObj.road_name || 'Unmapped road segment';
+        }
+        if ($('camLatencyVal')) {
+          $('camLatencyVal').textContent = `${resObj.processing_time_ms || 0} ms`;
+        }
+        if ($('camLastCaptureTime')) {
+          $('camLastCaptureTime').textContent = new Date().toLocaleTimeString();
+        }
+
+        // Preview overlay
+        if (resObj.overlay_frame_b64) {
+          const feed = $('cameraLiveFeed');
+          if (feed) feed.src = 'data:image/jpeg;base64,' + resObj.overlay_frame_b64;
+        }
+
+        // Reflect vehicle lane on Driver HUD lane widget
+        if (state.vehicles[state.myVehicleId]) {
+          state.vehicles[state.myVehicleId].lane = resObj.lane;
+          state.vehicles[state.myVehicleId].laneConfidence = resObj.lane_confidence;
+        }
+        let laneNum = 2;
+        if (resObj.lane_index) {
+          laneNum = Math.min(3, Math.max(1, resObj.lane_index));
+        } else if (resObj.lane === 'LEFT') {
+          laneNum = 1;
+        } else if (resObj.lane === 'RIGHT') {
+          laneNum = 3;
+        }
+        setMyLane(laneNum);
+
+      } else {
+        setPhoneCameraStatus('CAMERA READY');
+      }
+
+    } catch (err) {
+      console.warn('Still photo capture/analysis error:', err);
+      setPhoneCameraStatus('ANALYSIS FAILED', err.message);
+    } finally {
+      isCapturingStill = false;
+    }
+  }
 
   async function pollCameraTelemetry() {
+    // Sync backend settings e.g. diagnostic retention
     try {
       const res = await fetch('/api/camera/status');
       if (!res.ok) return;
       const data = await res.json();
-
-      const isEnabled = Boolean(data.camera_enabled);
-      state.cameraEnabled = isEnabled;
-
-      // Update Power Badge & Buttons
-      if ($('cameraAccessPill')) {
-        if (!isEnabled) {
-          $('cameraAccessPill').textContent = 'ACCESS: DISABLED (OFF)';
-          $('cameraAccessPill').style.background = 'rgba(239, 68, 68, 0.2)';
-          $('cameraAccessPill').style.color = '#f87171';
-          $('cameraAccessPill').style.borderColor = 'rgba(239, 68, 68, 0.4)';
-        } else if (data.camera_status === 'CAMERA_UNAVAILABLE') {
-          $('cameraAccessPill').textContent = 'CAMERA UNAVAILABLE';
-          $('cameraAccessPill').style.background = 'rgba(239, 68, 68, 0.2)';
-          $('cameraAccessPill').style.color = '#f87171';
-          $('cameraAccessPill').style.borderColor = 'rgba(239, 68, 68, 0.4)';
-        } else {
-          $('cameraAccessPill').textContent = 'ACCESS: ACTIVE (PHOTO 5s)';
-          $('cameraAccessPill').style.background = 'rgba(34, 197, 94, 0.2)';
-          $('cameraAccessPill').style.color = '#4ade80';
-          $('cameraAccessPill').style.borderColor = 'rgba(34, 197, 94, 0.4)';
-        }
-      }
-
-      if ($('btnCameraTurnOn') && $('btnCameraTurnOff')) {
-        if (isEnabled) {
-          $('btnCameraTurnOn').classList.add('active');
-          $('btnCameraTurnOff').classList.remove('active');
-        } else {
-          $('btnCameraTurnOff').classList.add('active');
-          $('btnCameraTurnOn').classList.remove('active');
-        }
-      }
-
-      if ($('cameraAccessStatusText')) {
-        if (!isEnabled) {
-          $('cameraAccessStatusText').innerHTML = 'Camera access is <strong>DISABLED</strong>. Camera hardware is completely stopped.';
-        } else if (data.camera_status === 'CAMERA_UNAVAILABLE') {
-          $('cameraAccessStatusText').innerHTML = '<span style="color: #f87171;"><strong>CAMERA_UNAVAILABLE:</strong> No physical camera detected. Real frames required; no synthetic frames fabricated in live mode.</span>';
-        } else {
-          $('cameraAccessStatusText').innerHTML = 'Vehicle camera captures <strong>1 still photo every 5s</strong> for ML lane inference. Video recording/streaming strictly disabled.';
-        }
-      }
-
-      if ($('cameraSourceBadge')) {
-        $('cameraSourceBadge').textContent = isEnabled
-          ? (data.source_type ? data.source_type.toUpperCase() : 'UNKNOWN')
-          : 'OFFLINE';
-      }
-      if ($('cameraFpsPill')) {
-        if (!isEnabled) {
-          $('cameraFpsPill').textContent = 'OFF';
-        } else if (data.next_capture_in_s !== undefined && data.next_capture_in_s !== null) {
-          $('cameraFpsPill').textContent = `NEXT PHOTO: ${data.next_capture_in_s.toFixed(1)}s`;
-        } else {
-          $('cameraFpsPill').textContent = 'STILL PHOTO (5s)';
-        }
-      }
       if ($('retentionToggle') && data.diagnostic_retention !== undefined) {
         $('retentionToggle').checked = Boolean(data.diagnostic_retention);
-      }
-      if ($('camCaptureStatus')) {
-        $('camCaptureStatus').textContent = data.last_capture_status === 'SUCCESS'
-          ? `SUCCESS (${(data.inference_latency_ms || 0).toFixed(1)} ms)`
-          : (data.camera_status || 'IDLE');
-        $('camCaptureStatus').style.color = data.last_capture_status === 'SUCCESS' ? 'var(--safe)' : 'var(--warning)';
-      }
-      if ($('camLastCaptureTime')) {
-        $('camLastCaptureTime').textContent = data.last_capture_time
-          ? new Date(data.last_capture_time * 1000).toLocaleTimeString()
-          : '—';
-      }
-      if ($('camModelBadge')) {
-        $('camModelBadge').textContent = data.model_type === 'pytorch_lane_net' ? 'PyTorch CNN (LaneFeatureNet)' : 'Classical CV';
-      }
-      if ($('camLaneVal')) {
-        const hasValidLane = isEnabled && data.lane && data.lane !== 'UNKNOWN' && (data.lane_confidence || 0) >= 0.45;
-        $('camLaneVal').textContent = isEnabled ? (hasValidLane ? data.lane : 'Lane not detected') : 'STANDBY';
-        $('camLaneVal').style.color = hasValidLane ? (data.lane === 'CENTER' ? 'var(--safe)' : 'var(--warning)') : 'var(--text-muted)';
-      }
-      if ($('camConfVal')) {
-        $('camConfVal').textContent = isEnabled ? `${Math.round((data.lane_confidence || 0) * 100)}%` : '—';
-      }
-      if ($('camOffsetVal')) {
-        const off = data.lateral_offset_m || 0.0;
-        $('camOffsetVal').textContent = isEnabled ? `${off >= 0 ? '+' : ''}${off} m` : '—';
-      }
-      if ($('camLatencyVal')) {
-        $('camLatencyVal').textContent = isEnabled ? `${data.inference_latency_ms || 0.0} ms` : '—';
-      }
-      if ($('camLightVal')) {
-        $('camLightVal').textContent = isEnabled ? (data.lighting_condition || 'NORMAL') : 'STANDBY';
-      }
-
-      // Refresh camera preview snapshot
-      if (state.currentTab === 'camera') {
-        const feed = $('cameraLiveFeed');
-        if (feed) {
-          if (isEnabled) {
-            feed.src = `/api/camera/preview?t=${Date.now()}`;
-          } else {
-            feed.src = '/api/camera/preview';
-          }
-        }
       }
     } catch (e) {}
   }
@@ -1869,6 +2107,8 @@
     const panelAmb = $('ambulancePanel');
 
     if (mode === 'AMBULANCE') {
+      stopPhoneCamera();
+
       if (btnAmb) btnAmb.classList.add('active');
       if (btnVeh) btnVeh.classList.remove('active');
       if (panelAmb) panelAmb.style.display = 'block';
@@ -1922,6 +2162,9 @@
           })
         });
       } catch (e) {}
+
+      startBrowserGeolocation();
+      startPhoneCamera();
     }
 
     attachMapToCurrentView();
@@ -1995,34 +2238,14 @@
 
     // Camera Access Power Buttons
     $('btnCameraTurnOn').addEventListener('click', async () => {
-      showToast('Turning ON Camera Access...');
-      try {
-        const res = await fetch('/api/camera/access', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ enabled: true, vehicle_id: state.myVehicleId })
-        });
-        const data = await res.json();
-        showToast(data.message || 'Camera Access: ENABLED');
-      } catch (err) {
-        showToast('Failed to enable camera: ' + err.message);
-      }
+      showToast('Turning ON Phone Rear-Camera Access...');
+      await startPhoneCamera();
       pollCameraTelemetry();
     });
 
     $('btnCameraTurnOff').addEventListener('click', async () => {
       showToast('Turning OFF Camera Access & Releasing Hardware...');
-      try {
-        const res = await fetch('/api/camera/access', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ enabled: false, vehicle_id: state.myVehicleId })
-        });
-        const data = await res.json();
-        showToast(data.message || 'Camera Access: DISABLED');
-      } catch (err) {
-        showToast('Failed to disable camera: ' + err.message);
-      }
+      stopPhoneCamera();
       const feed = $('cameraLiveFeed');
       if (feed) feed.src = '/api/camera/preview';
       pollCameraTelemetry();
@@ -2031,21 +2254,26 @@
     // Manual Still Photo Capture Button
     if ($('btnManualCapture')) {
       $('btnManualCapture').addEventListener('click', async () => {
-        showToast('Triggering single still-image capture (POST /api/camera/capture)...');
-        try {
-          const res = await fetch('/api/camera/capture', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ vehicle_id: state.myVehicleId })
-          });
-          const data = await res.json();
-          if (data.status === 'SUCCESS') {
-            showToast(`📸 Photo Captured! Lane: ${data.lane} (${Math.round(data.confidence * 100)}%)`);
-          } else {
-            showToast(`Capture result: ${data.status} ${data.error ? '(' + data.error + ')' : ''}`);
+        if (phoneMediaStream) {
+          showToast('Capturing still frame from phone camera...');
+          await captureAndAnalyzeStillPhoto();
+        } else {
+          showToast('Triggering single still-image capture (POST /api/camera/capture)...');
+          try {
+            const res = await fetch('/api/camera/capture', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ vehicle_id: state.myVehicleId })
+            });
+            const data = await res.json();
+            if (data.status === 'SUCCESS') {
+              showToast(`📸 Photo Captured! Lane: ${data.lane} (${Math.round(data.confidence * 100)}%)`);
+            } else {
+              showToast(`Capture result: ${data.status} ${data.error ? '(' + data.error + ')' : ''}`);
+            }
+          } catch (err) {
+            showToast('Manual capture request failed: ' + err.message);
           }
-        } catch (err) {
-          showToast('Manual capture request failed: ' + err.message);
         }
         pollCameraTelemetry();
       });
@@ -2550,6 +2778,9 @@
     syncDeviceAndAmbulanceHUD();
     startPeriodicSync();
     startBrowserGeolocation();
+    if (state.operatingMode === 'NORMAL_VEHICLE') {
+      startPhoneCamera();
+    }
 
     // Auto-connect to backend WebSocket
     setTimeout(() => {

@@ -55,7 +55,7 @@ class VehicleCameraManager:
         # Telemetry & Status
         self.camera_status = "DISABLED"  # DISABLED, IDLE, CAPTURING, CAMERA_UNAVAILABLE
         self.is_connected = False
-        self.source_type = "uninitialized"
+        self.source_type = "smartphone_rear_camera"
         self.resolution = (0, 0)
         self.frames_captured = 0
         self.last_capture_ts: Optional[float] = None
@@ -63,6 +63,44 @@ class VehicleCameraManager:
         self.last_error: Optional[str] = None
         self.latest_result: Optional[Dict[str, Any]] = None
         self.latest_frame_jpeg: Optional[bytes] = None
+
+    def ingest_uploaded_frame(
+        self,
+        frame_bytes: bytes,
+        vehicle_id: str,
+        timestamp: float,
+        result_dict: Dict[str, Any],
+        annotated_jpeg_bytes: Optional[bytes] = None,
+    ) -> None:
+        """Record an externally uploaded still frame from a participant smartphone camera."""
+        with self._capture_lock:
+            self.vehicle_id = vehicle_id
+            self.camera_enabled = True
+            self.is_connected = True
+            self.source_type = "smartphone_rear_camera"
+            self.camera_source = "smartphone_rear_camera"
+            self.camera_status = "IDLE"
+            self.frames_captured += 1
+            self.last_capture_ts = timestamp
+            self.next_capture_ts = timestamp + self.capture_interval_s
+            self.latest_result = result_dict
+            self.last_error = None
+
+            if annotated_jpeg_bytes:
+                self.latest_frame_jpeg = annotated_jpeg_bytes
+            else:
+                self.latest_frame_jpeg = frame_bytes
+
+            # Diagnostic Retention Handling
+            if self.diagnostic_retention and self.latest_frame_jpeg:
+                try:
+                    diag_dir = os.path.join(os.path.dirname(__file__), "data", "diagnostic_snapshots")
+                    os.makedirs(diag_dir, exist_ok=True)
+                    diag_file = os.path.join(diag_dir, f"snap_{int(timestamp)}_{vehicle_id}.jpg")
+                    with open(diag_file, "wb") as f:
+                        f.write(self.latest_frame_jpeg)
+                except Exception as exc:
+                    logger.warning("Failed saving diagnostic snapshot: %s", exc)
 
     def _acquire_single_frame(self) -> Tuple[bool, Optional[np.ndarray], str]:
         """Capture exactly one still frame from configured camera and release capture hardware."""
@@ -342,5 +380,5 @@ _camera_manager: Optional[VehicleCameraManager] = None
 def get_camera_manager(vehicle_id: str = "V001") -> VehicleCameraManager:
     global _camera_manager
     if _camera_manager is None:
-        _camera_manager = VehicleCameraManager(vehicle_id=vehicle_id, camera_source=0, capture_interval_s=5.0)
+        _camera_manager = VehicleCameraManager(vehicle_id=vehicle_id, camera_source="smartphone_rear_camera", capture_interval_s=5.0)
     return _camera_manager

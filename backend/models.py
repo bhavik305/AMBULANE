@@ -181,6 +181,18 @@ class VehicleTelemetry(BaseModel):
         le=1.0,
         description="Confidence score 0..1 for the lane label (STEP 3 fills this)",
     )
+    total_lanes: Optional[int] = Field(
+        default=None,
+        description="Total road lanes from OpenStreetMap evidence",
+    )
+    direction_lanes: Optional[int] = Field(
+        default=None,
+        description="Direction-specific lane count from OpenStreetMap",
+    )
+    lane_source: Optional[str] = Field(
+        default=None,
+        description="Data source: 'MAP_AND_CAMERA', 'CAMERA_ONLY', 'MAP_ONLY', or 'UNKNOWN'",
+    )
 
     ts: float = Field(..., gt=0.0, description="Unix timestamp (seconds) of the reading")
 

@@ -446,8 +446,10 @@
         <div class="camera-panel-wrapper">
           <!-- Video / Live Snapshot Box -->
           <div class="camera-preview-container">
+            <video id="phoneCameraVideo" playsinline autoplay muted style="display:none;"></video>
+            <canvas id="phoneCameraCanvas" style="display:none;"></canvas>
             <img id="cameraLiveFeed" class="camera-feed-img" src="/api/camera/preview" alt="Vehicle Camera Feed" />
-            <div class="camera-overlay-badge" id="cameraSourceBadge">PHYSICAL USB (0)</div>
+            <div class="camera-overlay-badge" id="cameraSourceBadge">PHONE REAR CAMERA</div>
             <div class="camera-fps-pill" id="cameraFpsPill">STILL PHOTO (5s)</div>
           </div>
 
@@ -493,41 +495,53 @@
           <!-- Camera Source Control Bar -->
           <div class="camera-source-toolbar card">
             <div class="source-toggle-group">
-              <button class="btn-source active" id="btnSourceUsb">Physical USB Camera (0)</button>
-              <button class="btn-source" id="btnSourceSim">Prerecorded Test Photo Mode</button>
+              <button class="btn-source active" id="btnSourcePhone">Smartphone Rear Camera (facingMode: environment)</button>
+              <button class="btn-source" id="btnSourceSim" style="display: none;">Prerecorded Test Photo Mode</button>
             </div>
           </div>
 
           <!-- Neural Model Telemetry Card -->
           <div class="card">
             <div class="card-header-row">
-              <span class="card-section-title">NEURAL ML INFERENCE TELEMETRY</span>
+              <span class="card-section-title">NEURAL ML & MAP-ASSISTED LANE TELEMETRY</span>
               <span class="badge-pill active" id="camModelBadge">PyTorch CNN</span>
             </div>
 
             <div class="cam-metrics-grid">
               <div class="metric-tile">
                 <div class="metric-caption">ESTIMATED LANE</div>
-                <div class="metric-strong" id="camLaneVal">CENTER</div>
+                <div class="metric-strong" id="camLaneVal">STANDBY</div>
               </div>
               <div class="metric-tile">
                 <div class="metric-caption">CONFIDENCE</div>
-                <div class="metric-strong" id="camConfVal">92%</div>
+                <div class="metric-strong" id="camConfVal">—</div>
+              </div>
+              <div class="metric-tile">
+                <div class="metric-caption">ROAD LANES (OSM)</div>
+                <div class="metric-strong" id="camTotalLanesVal">—</div>
+              </div>
+              <div class="metric-tile">
+                <div class="metric-caption">DATA SOURCE</div>
+                <div class="metric-strong" id="camSourceVal">STANDBY</div>
               </div>
               <div class="metric-tile">
                 <div class="metric-caption">LATERAL OFFSET</div>
-                <div class="metric-strong" id="camOffsetVal">+0.08 m</div>
+                <div class="metric-strong" id="camOffsetVal">—</div>
               </div>
               <div class="metric-tile">
                 <div class="metric-caption">INFERENCE LATENCY</div>
-                <div class="metric-strong" id="camLatencyVal">11.4 ms</div>
+                <div class="metric-strong" id="camLatencyVal">—</div>
               </div>
             </div>
 
             <div class="camera-info-footer">
               <div class="info-row">
                 <span>Capture Status:</span>
-                <strong id="camCaptureStatus">IDLE</strong>
+                <strong id="camCaptureStatus">CAMERA OFF</strong>
+              </div>
+              <div class="info-row">
+                <span>Matched OSM Road:</span>
+                <strong id="camRoadNameVal">—</strong>
               </div>
               <div class="info-row">
                 <span>Last Capture Timestamp:</span>
@@ -535,7 +549,7 @@
               </div>
               <div class="info-row">
                 <span>Illumination Condition:</span>
-                <strong id="camLightVal">NORMAL DAYLIGHT</strong>
+                <strong id="camLightVal">STANDBY</strong>
               </div>
               <div class="info-row">
                 <span>Evaluation Mode:</span>
