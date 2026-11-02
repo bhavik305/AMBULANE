@@ -29,3 +29,6 @@ Thumbs.db
 
 # Graphify cache
 graphify-out/cache/
+
+# Local Map Tile Cache
+backend/cache/
