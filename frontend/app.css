@@ -582,10 +582,29 @@ input:checked + .slider-switch:before {
   min-height: 450px;
 }
 
-#map {
+#map, #ambulance-map, .map-container, #mapSharedWrapper {
   width: 100%;
   height: 100%;
+  min-height: 350px;
   background: #111;
+  position: relative;
+}
+
+#vehicleMapSlot, #ambulanceMapSlot {
+  width: 100%;
+  min-height: 350px;
+  position: relative;
+}
+
+@media (max-width: 768px) {
+  #vehicleMapSlot, #ambulanceMapSlot {
+    height: 50vh;
+    min-height: 350px;
+  }
+  .map-screen-wrapper {
+    height: calc(100vh - 140px);
+    min-height: 350px;
+  }
 }
 
 .map-telemetry-banner {
@@ -1390,6 +1409,10 @@ input:checked + .slider-switch:before {
 
 /* Leaflet Dark Theme & Marker Styles */
 .leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 350px !important;
+  z-index: 1;
   background-color: #121214 !important;
   font-family: var(--font-family) !important;
 }

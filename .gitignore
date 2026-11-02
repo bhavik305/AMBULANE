@@ -32,3 +32,4 @@ graphify-out/cache/
 
 # Local Map Tile Cache
 backend/cache/
+backend/data/

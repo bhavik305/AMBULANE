@@ -39,9 +39,9 @@
     tileUrl: (function() {
       const saved = localStorage.getItem('evas_tile_url');
       if (saved && !saved.includes('tile.openstreetmap.org')) return saved;
-      return '/api/map/tiles/{z}/{x}/{y}.png';
+      return `${window.location.origin}/api/map/tiles/{z}/{x}/{y}.png`;
     })(),
-    routingUrl: localStorage.getItem('evas_routing_url') || '/api/journey/route',
+    routingUrl: localStorage.getItem('evas_routing_url') || `${window.location.origin}/api/journey/route`,
 
     // Fleet state received from FastAPI backend (null/empty until valid telemetry arrives)
     ambulance: null,
@@ -155,9 +155,25 @@
   // --- Browser Real GPS Geolocation (Participant Mobile Tracking) ---
   let geoWatchId = null;
   function startBrowserGeolocation() {
-    if (!navigator.geolocation) {
-      if ($('hudGpsStatus')) $('hudGpsStatus').textContent = 'UNSUPPORTED';
-      if ($('ambCurrentGpsLabel')) $('ambCurrentGpsLabel').textContent = 'Geolocation not supported by browser';
+    const isSecure = window.isSecureContext !== false;
+
+    // Ensure state.myPosition has a sensible default corridor position
+    if (!state.myPosition) {
+      state.myPosition = { lat: 9.4580, lng: 76.4407 };
+      renderHUD();
+      updateMapMarkers();
+    }
+
+    if (!navigator.geolocation || !isSecure) {
+      const reason = !isSecure ? 'HTTP LAN origin (insecure context blocks GPS)' : 'Geolocation unsupported';
+      console.warn('Geolocation notice:', reason);
+      if ($('hudGpsStatus')) {
+        $('hudGpsStatus').textContent = !isSecure ? 'HTTP LAN (DEMO COORDS)' : 'UNSUPPORTED';
+        $('hudGpsStatus').style.color = '#eab308';
+      }
+      if ($('ambCurrentGpsLabel')) {
+        $('ambCurrentGpsLabel').textContent = 'Using demo coordinates (HTTP LAN)';
+      }
       return;
     }
     if (geoWatchId !== null) return;
@@ -226,14 +242,21 @@
         }
       },
       (err) => {
-        console.debug('Browser geolocation status:', err.message);
+        const isSec = window.isSecureContext !== false;
+        const msg = (err.code === 1 && !isSec) ? 'Insecure HTTP origin blocks GPS' : (err.message || 'GPS error');
+        console.warn('Browser geolocation status:', msg);
         if ($('hudGpsStatus')) {
-          $('hudGpsStatus').textContent = 'PERMISSION DENIED / UNAVAILABLE';
-          $('hudGpsStatus').style.color = '#f87171';
+          $('hudGpsStatus').textContent = 'DEMO GPS (CORRIDOR)';
+          $('hudGpsStatus').style.color = '#eab308';
         }
         if ($('ambCurrentGpsLabel')) {
-          $('ambCurrentGpsLabel').textContent = 'GPS permission denied or unavailable';
+          $('ambCurrentGpsLabel').textContent = 'GPS unavailable — using demo coords';
         }
+        if (!state.myPosition) {
+          state.myPosition = { lat: 9.4580, lng: 76.4407 };
+        }
+        renderHUD();
+        updateMapMarkers();
       },
       { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
     );
@@ -415,7 +438,7 @@
     }
 
     const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host || 'localhost:8000';
+    const host = window.location.host || (window.location.hostname ? (window.location.hostname + (window.location.port ? ':' + window.location.port : '')) : 'localhost:8000');
     return `${proto}//${host}`;
   }
 
@@ -1381,7 +1404,8 @@
 
     isMapInitializing = true;
     try {
-      let initialCenter = [12.9716, 77.5946];
+      // Set initial position immediately and unconditionally using corridor coordinates
+      let initialCenter = [9.4580, 76.4407];
       let initialZoom = 15;
 
       if (state.ambulance && isValidCoordinate(state.ambulance.lat, state.ambulance.lng)) {
@@ -1397,21 +1421,25 @@
         attributionControl: true,
       }).setView(initialCenter, initialZoom);
 
-      tileLayer = L.tileLayer(state.tileUrl, {
+      const primaryTileUrl = `${window.location.origin}/api/map/tiles/{z}/{x}/{y}.png`;
+      state.tileUrl = primaryTileUrl;
+
+      tileLayer = L.tileLayer(primaryTileUrl, {
         maxZoom: 19,
-        subdomains: ['a', 'b', 'c'],
+        crossOrigin: true,
+        referrerPolicy: 'strict-origin-when-cross-origin',
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
       }).addTo(leafletMap);
 
-      let tileErrorCount = 0;
-      tileLayer.on('tileerror', (err) => {
-        tileErrorCount++;
-        // If the primary tile URL fails repeatedly and was direct OSM, automatically fallback to local proxy
-        if (tileErrorCount > 4 && state.tileUrl.includes('tile.openstreetmap.org')) {
-          console.warn('Direct OSM tile failed on this network; falling back to backend tile proxy...');
-          state.tileUrl = '/api/map/tiles/{z}/{x}/{y}.png';
-          tileLayer.setUrl(state.tileUrl);
-          tileErrorCount = 0;
+      let tileFailoverCount = 0;
+      tileLayer.on('tileerror', () => {
+        tileFailoverCount++;
+        if (tileFailoverCount === 3) {
+          console.warn('Local tile proxy error; failing over to direct OSM HTTPS...');
+          tileLayer.setUrl('https://tile.openstreetmap.org/{z}/{x}/{y}.png');
+        } else if (tileFailoverCount > 6) {
+          console.warn('Failing over to CartoDB Voyager...');
+          tileLayer.setUrl('https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png');
         }
       });
 
@@ -1419,13 +1447,27 @@
       updateMapCorridor();
       attachMapToCurrentView();
 
-      // Recalculate size on window resize / orientation change on mobile
+      // Recalculate size after DOM rendering for mobile viewports
+      setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(true); }, 250);
+      setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(true); }, 600);
+
+      // Window resize / orientation change listeners for mobile
       window.addEventListener('resize', () => {
         if (leafletMap) leafletMap.invalidateSize(true);
       });
       window.addEventListener('orientationchange', () => {
         setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(true); }, 300);
       });
+
+      // ResizeObserver on map containers
+      if (window.ResizeObserver) {
+        const ro = new ResizeObserver(() => {
+          if (leafletMap) leafletMap.invalidateSize(true);
+        });
+        ro.observe(mapElem);
+        const wrapper = $('mapSharedWrapper');
+        if (wrapper) ro.observe(wrapper);
+      }
     } catch (err) {
       console.error('Error initializing Leaflet map:', err);
     } finally {
@@ -2214,6 +2256,12 @@
     });
 
     attachMapToCurrentView();
+
+    if (leafletMap) {
+      setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(true); }, 50);
+      setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(true); }, 250);
+      setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(true); }, 600);
+    }
 
     if (tabName === 'camera') {
       pollCameraTelemetry();

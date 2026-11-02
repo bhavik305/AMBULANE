@@ -206,6 +206,33 @@ body {
     to { opacity: 1; transform: translate(-50%, 0); }
 }
 
+/* Map Container & Leaflet Mobile Sizing */
+#map, .map-container, #ambulance-map {
+    width: 100%;
+    height: 350px;
+    min-height: 350px;
+    background: #0f172a;
+    border-radius: 12px;
+    position: relative;
+    z-index: 1;
+}
+
+.leaflet-container {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 350px !important;
+    z-index: 1;
+    background-color: #0f172a !important;
+    font-family: inherit !important;
+}
+
+@media (max-width: 768px) {
+    #map, .map-container {
+        height: 45vh;
+        min-height: 300px;
+    }
+}
+
 @media (min-width: 600px) {
     .footer {
         flex-direction: row;

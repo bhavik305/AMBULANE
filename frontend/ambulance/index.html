@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta name="theme-color" content="#1e3a8a">
 
     <title>Ambulance GPS — Lane-Aware Alert System</title>
     <link rel="manifest" href="/frontend/ambulance/manifest.json">
     <link rel="icon" type="image/svg+xml" href="/frontend/ambulance/favicon.svg">
 
+    <link rel="stylesheet" href="/frontend/vendor/leaflet.css">
     <link rel="stylesheet" href="ambulance.css">
 </head>
 <body>
@@ -70,6 +72,14 @@
                 </div>
             </section>
 
+            <section class="card map-card" style="padding: 0; overflow: hidden; border-radius: 12px; margin-bottom: 14px;">
+                <div style="padding: 10px 14px; background: rgba(30, 41, 59, 0.9); border-bottom: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center;">
+                    <h2 style="margin: 0; font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600;">AMBULANCE LOCATION MAP</h2>
+                    <span style="font-size: 11px; color: var(--muted);">&copy; OpenStreetMap contributors</span>
+                </div>
+                <div id="map" class="map-container" style="width: 100%; height: 350px; min-height: 350px;"></div>
+            </section>
+
             <section class="card emergency-card">
                 <h2>Emergency Mode</h2>
                 <div class="row">
@@ -94,6 +104,7 @@
         <div class="toast" id="toast" hidden></div>
     </div>
 
+    <script src="/frontend/vendor/leaflet.js"></script>
     <script src="ambulance.js"></script>
 </body>
 </html>
