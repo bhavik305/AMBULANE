@@ -36,12 +36,8 @@
     simTimer: null,
     isPlayingSim: false,
     isDemoModeActive: false,
-    tileUrl: (function() {
-      const saved = localStorage.getItem('evas_tile_url');
-      if (saved && !saved.includes('tile.openstreetmap.org')) return saved;
-      return `${window.location.origin}/api/map/tiles/{z}/{x}/{y}.png`;
-    })(),
-    routingUrl: localStorage.getItem('evas_routing_url') || `${window.location.origin}/api/journey/route`,
+    tileUrl: `${window.location.origin}/api/map/tiles/{z}/{x}/{y}.png`,
+    routingUrl: `${window.location.origin}/api/journey/route`,
 
     // Fleet state received from FastAPI backend (null/empty until valid telemetry arrives)
     ambulance: null,
@@ -1385,10 +1381,22 @@
     }
 
     if (leafletMap) {
-      // Staggered invalidations ensure mobile browsers recalculate layout correctly
-      setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(true); }, 50);
-      setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(true); }, 200);
-      setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(true); }, 500);
+      const revalidate = () => {
+        if (!leafletMap) return;
+        leafletMap.invalidateSize(true);
+        let c = [9.4580, 76.4407];
+        if (state.ambulance && isValidCoordinate(state.ambulance.lat, state.ambulance.lng)) {
+          c = [state.ambulance.lat, state.ambulance.lng];
+        } else if (state.myPosition && isValidCoordinate(state.myPosition.lat, state.myPosition.lng)) {
+          c = [state.myPosition.lat, state.myPosition.lng];
+        }
+        leafletMap.panTo(c, { animate: false });
+      };
+
+      // Staggered invalidations ensure mobile and desktop recalculate layout cleanly
+      setTimeout(revalidate, 50);
+      setTimeout(revalidate, 200);
+      setTimeout(revalidate, 500);
     }
   }
 
