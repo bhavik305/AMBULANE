@@ -56,10 +56,10 @@
 // Network & Server Configuration
 // (Update with your Wi-Fi credentials and backend server address)
 // ---------------------------------------------------------------------------
-const char* WIFI_SSID     = "YOUR_WIFI_SSID";
-const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
+const char* WIFI_SSID     = "BHAVIK 3274";
+const char* WIFI_PASSWORD = "12345678";
 
-const char* BACKEND_HOST = "192.168.1.100";  // IP address of computer running FastAPI
+const char* BACKEND_HOST = "10.70.34.155";  // IP address of computer running FastAPI
 const int   BACKEND_PORT = 8000;
 const char* WS_PATH      = "/ws/ambulance";
 

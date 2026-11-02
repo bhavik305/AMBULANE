@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#09090B">
   <meta name="description" content="Lane-Aware Intelligent Emergency Vehicle Alert & Adaptive Traffic Signal Clearance System">
+  <meta name="referrer" content="origin-when-cross-origin">
   <title>Lane-Aware EVAS — Intelligent Emergency Vehicle Alert System</title>
 
   <!-- Google Fonts: Inter -->
@@ -652,16 +653,16 @@
       <section id="screenSettings" class="screen-view">
         <div class="settings-section-title">MAP & ROUTING CONFIGURATION (OPENSTREETMAP + OSRM)</div>
         <div class="card">
-          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
-            Interactive mapping is powered by <strong>Leaflet</strong>, <strong>OpenStreetMap</strong> raster tiles, and the <strong>OSRM</strong> road routing engine. No proprietary API key required.
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5;">
+            Interactive mapping is powered by <strong>Leaflet</strong>, <strong>OpenStreetMap</strong> raster tiles, and the <strong>OSRM</strong> road routing engine. <strong>No proprietary API key required</strong> (OpenStreetMap is 100% open-source and free). Includes automatic LAN tile proxying and offline caching.
           </div>
           <div class="form-group">
-            <label class="form-label" for="settingsTileUrlInput">OpenStreetMap Tile Server URL</label>
-            <input type="text" id="settingsTileUrlInput" class="form-input" value="https://tile.openstreetmap.org/{z}/{x}/{y}.png">
+            <label class="form-label" for="settingsTileUrlInput">OpenStreetMap Tile Server URL (or LAN Proxy)</label>
+            <input type="text" id="settingsTileUrlInput" class="form-input" value="/api/map/tiles/{z}/{x}/{y}.png">
           </div>
           <div class="form-group">
-            <label class="form-label" for="settingsRoutingUrlInput">Routing Service Base URL (OSRM)</label>
-            <input type="text" id="settingsRoutingUrlInput" class="form-input" value="https://router.project-osrm.org">
+            <label class="form-label" for="settingsRoutingUrlInput">Routing Service Base URL (OSRM / Backend)</label>
+            <input type="text" id="settingsRoutingUrlInput" class="form-input" value="/api/journey/route">
           </div>
           <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">
             Attribution: <strong style="color: var(--text-primary);">&copy; OpenStreetMap contributors</strong>

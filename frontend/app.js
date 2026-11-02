@@ -36,8 +36,12 @@
     simTimer: null,
     isPlayingSim: false,
     isDemoModeActive: false,
-    tileUrl: localStorage.getItem('evas_tile_url') || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    routingUrl: localStorage.getItem('evas_routing_url') || 'https://router.project-osrm.org',
+    tileUrl: (function() {
+      const saved = localStorage.getItem('evas_tile_url');
+      if (saved && !saved.includes('tile.openstreetmap.org')) return saved;
+      return '/api/map/tiles/{z}/{x}/{y}.png';
+    })(),
+    routingUrl: localStorage.getItem('evas_routing_url') || '/api/journey/route',
 
     // Fleet state received from FastAPI backend (null/empty until valid telemetry arrives)
     ambulance: null,
@@ -1358,9 +1362,10 @@
     }
 
     if (leafletMap) {
-      setTimeout(() => {
-        leafletMap.invalidateSize(true);
-      }, 50);
+      // Staggered invalidations ensure mobile browsers recalculate layout correctly
+      setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(true); }, 50);
+      setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(true); }, 200);
+      setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(true); }, 500);
     }
   }
 
@@ -1394,16 +1399,33 @@
 
       tileLayer = L.tileLayer(state.tileUrl, {
         maxZoom: 19,
+        subdomains: ['a', 'b', 'c'],
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
       }).addTo(leafletMap);
 
+      let tileErrorCount = 0;
       tileLayer.on('tileerror', (err) => {
-        console.warn('Map tile unavailable from provider:', err);
+        tileErrorCount++;
+        // If the primary tile URL fails repeatedly and was direct OSM, automatically fallback to local proxy
+        if (tileErrorCount > 4 && state.tileUrl.includes('tile.openstreetmap.org')) {
+          console.warn('Direct OSM tile failed on this network; falling back to backend tile proxy...');
+          state.tileUrl = '/api/map/tiles/{z}/{x}/{y}.png';
+          tileLayer.setUrl(state.tileUrl);
+          tileErrorCount = 0;
+        }
       });
 
       updateMapMarkers();
       updateMapCorridor();
       attachMapToCurrentView();
+
+      // Recalculate size on window resize / orientation change on mobile
+      window.addEventListener('resize', () => {
+        if (leafletMap) leafletMap.invalidateSize(true);
+      });
+      window.addEventListener('orientationchange', () => {
+        setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(true); }, 300);
+      });
     } catch (err) {
       console.error('Error initializing Leaflet map:', err);
     } finally {
@@ -2781,6 +2803,17 @@
     if (state.operatingMode === 'NORMAL_VEHICLE') {
       startPhoneCamera();
     }
+
+    // Synchronize map & routing configuration from backend
+    fetch('/api/config')
+      .then(res => res.json())
+      .then(cfg => {
+        if (cfg && cfg.tile_url && !localStorage.getItem('evas_tile_url')) {
+          state.tileUrl = cfg.tile_url;
+          if (tileLayer) tileLayer.setUrl(state.tileUrl);
+        }
+      })
+      .catch(() => {});
 
     // Auto-connect to backend WebSocket
     setTimeout(() => {

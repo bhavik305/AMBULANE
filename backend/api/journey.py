@@ -150,7 +150,9 @@ async def get_app_config() -> Dict[str, Any]:
 
     return {
         "map_provider": "openstreetmap",
-        "tile_url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "tile_url": "/api/map/tiles/{z}/{x}/{y}.png",
+        "upstream_tile_url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "api_key_required": False,
         "attribution": "© OpenStreetMap contributors",
         "routing_service": "osrm",
         "lan_ip": lan_ip,
