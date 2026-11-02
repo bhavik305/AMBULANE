@@ -1,17 +1,17 @@
-# Graph Report - MINOR  (2026-11-01)
+# Graph Report - MINOR  (2026-11-02)
 
 ## Corpus Check
-- 130 files · ~76,947 words
+- 131 files · ~78,750 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 64 file(s) not represented in the graph (top: .xml 19, .xcconfig 8, (none) 7)
 
 ## Summary
-- 1742 nodes · 3036 edges · 101 communities (81 shown, 20 thin omitted)
+- 1759 nodes · 3064 edges · 114 communities (89 shown, 25 thin omitted)
 - Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 151 edges (avg confidence: 0.89)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `406f8617`
+- Built from commit: `668a8230`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -24,26 +24,26 @@
 - time
 - WebSocketManager
 - lane_detection.py
-- demo_fixtures.py
+- junction.py
 - RouteEngine
 - my_application.cc
 - websocket_service.dart
 - simulation_engine.dart
 - emergency_alert.dart
 - VehicleCameraManager
-- models.py
+- get_ws_manager
 - dependencies
 - leaflet.js
-- test_final_audit_suite.py
+- DeviceService
 - JunctionService
-- get_ws_manager
+- test_evas_full_integration.py
 - utils.cpp
 - test_step5_route_engine.py
 - colors.dart
 - main.py
 - camera.py
 - win32_window.cpp
-- get
+- road_service.py
 - FlutterWindow
 - train_lane_model.py
 - Tool Orchestration
@@ -61,7 +61,7 @@
 - web/manifest.json
 - Win32Window
 - TemporalLaneTracker
-- test_phone_camera_road_service.py
+- RoadService
 - telemetry_card.dart
 - alert_banner_widget.dart
 - ambulance/manifest.json
@@ -75,15 +75,17 @@
 - analysis_options.yaml
 - windows/flutter/generated_plugin_registrant.cc
 - Jt
+- get_device_service
 - Agent: General
-- trigger_demo_scenario
+- logging
+- test_step4_validation.py
 - StatelessWidget
 - widget_test.dart
 - i
 - oi
 - Point
 - Size
-- list_demo_scenarios
+- journey.py
 - Agent: Verify
 - The 7 Attack Vectors
 - Model-Native Optimization Notes (Gemini tuned)
@@ -109,6 +111,18 @@
 - run-checks.sh
 - SESSION_FAILURES.md
 - LaunchImage.imageset/README.md
+- test_phone_camera_road_service.py
+- test_final_audit_suite.py
+- .evaluate_eta_and_trigger
+- load_deterministic_scenario
+- ambulance.py
+- MatchingEngine
+- test_esp32_firmware_simulation.py
+- get_ws_manager
+- DeviceRole
+- test_junction_websocket_and_telemetry_flow
+- test_criterion_12_esp32_command_validation_and_ack
+- test_eta_triggered_priority_logic
 
 ## God Nodes (most connected - your core abstractions)
 1. `AmbulanceState` - 49 edges
@@ -125,8 +139,8 @@
 ## Surprising Connections (you probably didn't know these)
 - `Simulation Firmware Design (`esp32_benchtwin_sim.ino`)` --references--> `AmbulanceTelemetry`  [INFERRED]
   firmware/README.md → backend/models.py
-- `DeepLearningLaneModel` --uses--> `LaneFeatureNet`  [INFERRED]
-  backend/ai/lane_model.py → backend/ai/model_def.py
+- `train_and_export()` --uses--> `LaneFeatureNet`  [INFERRED]
+  backend/ai/train_lane_model.py → backend/ai/model_def.py
 - `_serialize_state()` --uses--> `AmbulanceState`  [INFERRED]
   backend/api/ambulance.py → backend/models.py
 - `_handle_telemetry()` --uses--> `AmbulanceTelemetry`  [INFERRED]
@@ -137,7 +151,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (101 total, 20 thin omitted)
+## Communities (114 total, 25 thin omitted)
 
 ### Community 0 - "app_state.dart"
 Cohesion: 0.04
@@ -152,28 +166,28 @@ Cohesion: 0.06
 Nodes (17): audioplayers_darwin, Cocoa, device_info_plus, Flutter, FlutterMacOS, Foundation, AppDelegate, SceneDelegate (+9 more)
 
 ### Community 3 - "json"
-Cohesion: 0.07
-Nodes (25): count_source_files(), detect_language(), main(), suggest_budget(), imported_plugin_names(), main(), sha256(), main() (+17 more)
+Cohesion: 0.09
+Nodes (22): count_source_files(), detect_language(), main(), suggest_budget(), imported_plugin_names(), main(), sha256(), main() (+14 more)
 
 ### Community 4 - "test_step8_lane_detection.py"
 Cohesion: 0.13
-Nodes (14): detect_lane(), decode_frame(), extract_road_roi(), preprocess_frame(), _create_sample_road_frame(), test_criterion_3_ml_inference_on_real_image(), test_criterion_4_lane_unknown_on_occluded_image(), test_direct_process_frame_with_map_fusion() (+6 more)
+Nodes (14): detect_lane(), _filter_lane_colors(), _fit_lane_lines(), generate_lane_overlay(), decode_frame(), extract_road_roi(), preprocess_frame(), test_criterion_4_lane_unknown_on_occluded_image() (+6 more)
 
 ### Community 5 - "time"
-Cohesion: 0.09
-Nodes (18): DefaultMatchingEngine, MatchingConfig, MatchResult, AmbulanceState, VehicleState, test_criterion_7_normal_vehicle_matching(), test_criterion_8_stale_telemetry_protection(), test_ambulance_invalid_coordinates_handled_safely() (+10 more)
+Cohesion: 0.19
+Nodes (16): DefaultMatchingEngine, MatchingConfig, AmbulanceState, VehicleState, test_criterion_7_normal_vehicle_matching(), test_criterion_8_stale_telemetry_protection(), test_ambulance_invalid_coordinates_handled_safely(), test_vehicle_ahead_in_adjacent_lane_clear() (+8 more)
 
 ### Community 7 - "lane_detection.py"
-Cohesion: 0.11
-Nodes (9): _filter_lane_colors(), _fit_lane_lines(), generate_lane_overlay(), get_lane_model(), DeepLearningLaneModel, LaneDetectionModel, load_model(), test_neural_lane_inference() (+1 more)
+Cohesion: 0.10
+Nodes (6): get_lane_model(), DeepLearningLaneModel, LaneDetectionModel, load_model(), LaneFeatureNet, test_model_scaffold()
 
-### Community 8 - "demo_fixtures.py"
-Cohesion: 0.06
-Nodes (17): get_all_junctions(), junction_websocket(), JunctionConfigUpdate, ManualPriorityTrigger, report_junction_hardware_state(), trigger_manual_priority(), update_junction_config(), list_demo_scenarios() (+9 more)
+### Community 8 - "junction.py"
+Cohesion: 0.15
+Nodes (8): get_all_junctions(), junction_websocket(), JunctionConfigUpdate, ManualPriorityTrigger, report_junction_hardware_state(), trigger_manual_priority(), update_junction_config(), get_junction_service()
 
 ### Community 9 - "RouteEngine"
-Cohesion: 0.10
-Nodes (7): JourneyService, ActiveJourney, StartJourneyRequest, Corridor, Route, RouteEngine, test_corridor_geometry_and_membership()
+Cohesion: 0.11
+Nodes (8): JourneyService, ActiveJourney, StartJourneyRequest, Corridor, Route, RouteEngine, RoutePoint, test_corridor_geometry_and_membership()
 
 ### Community 10 - "my_application.cc"
 Cohesion: 0.08
@@ -195,9 +209,9 @@ Nodes (27): ambulanceId, ambulanceLane, ambulanceLat, ambulanceLon, distanceMete
 Cohesion: 0.09
 Nodes (4): VehicleCameraManager, test_camera_manager_lifecycle(), test_criterion_1_camera_still_image_interval(), test_criterion_2_camera_unavailable_handling()
 
-### Community 15 - "models.py"
-Cohesion: 0.13
-Nodes (9): _handle_telemetry(), _serialize_state(), vehicle_websocket(), AmbulanceTelemetry, VehicleTelemetry, test_ambulance_telemetry_coordinate_out_of_range(), test_ambulance_telemetry_invalid_speed_and_heading(), test_ambulance_telemetry_valid() (+1 more)
+### Community 15 - "get_ws_manager"
+Cohesion: 0.27
+Nodes (3): _handle_telemetry(), _serialize_state(), vehicle_websocket()
 
 ### Community 16 - "dependencies"
 Cohesion: 0.08
@@ -207,53 +221,49 @@ Nodes (25): dependencies, audioplayers, cupertino_icons, flutter, flutter_map, g
 Cohesion: 0.09
 Nodes (4): a(), Ci(), l(), x()
 
-### Community 18 - "test_final_audit_suite.py"
-Cohesion: 0.07
-Nodes (18): get_ambulance_config(), get_device(), list_devices(), register_device(), update_ambulance_config(), DeviceService, get_device_service(), AmbulanceConfigRequest (+10 more)
+### Community 18 - "DeviceService"
+Cohesion: 0.16
+Nodes (5): DeviceService, AmbulanceConfigRequest, DeviceRegistration, test_criterion_5_device_registration_and_role_authorization(), test_criterion_6_ambulance_fixed_configured_lane_and_approach()
 
 ### Community 19 - "JunctionService"
-Cohesion: 0.10
-Nodes (9): JunctionService, JunctionConfig, JunctionLights, JunctionState, LightAspects, SignalPriorityRequest, test_criterion_13_conflicting_green_prevention(), test_criterion_14_physical_led_honest_hardware_status() (+1 more)
+Cohesion: 0.16
+Nodes (8): JunctionService, JunctionConfig, JunctionLights, JunctionState, LightAspects, SignalPriorityRequest, test_criterion_13_conflicting_green_prevention(), test_criterion_14_physical_led_honest_hardware_status()
 
-### Community 20 - "get_ws_manager"
-Cohesion: 0.05
-Nodes (20): clean_singletons(), test_junction_websocket_and_telemetry_flow(), client(), test_app_config_returns_openstreetmap_and_osrm(), test_camera_status_and_lane_reporting(), test_device_role_registration(), test_frontend_dom_ids_and_no_google_maps(), test_frontend_static_assets_served() (+12 more)
+### Community 20 - "test_evas_full_integration.py"
+Cohesion: 0.08
+Nodes (11): client(), test_app_config_returns_openstreetmap_and_osrm(), test_camera_status_and_lane_reporting(), test_device_role_registration(), test_frontend_dom_ids_and_no_google_maps(), test_frontend_static_assets_served(), test_journey_lifecycle_start_and_stop(), test_journey_route_calculation_endpoint() (+3 more)
 
 ### Community 21 - "utils.cpp"
 Cohesion: 0.14
 Nodes (4): wWinMain(), CreateAndAttachConsole(), GetCommandLineArguments(), Utf8FromUtf16()
 
 ### Community 22 - "test_step5_route_engine.py"
-Cohesion: 0.11
-Nodes (8): calculate_route(), get_active_journey(), get_app_config(), _get_local_ip(), OSRMRouteEngine, RoutingError, test_osrm_mocked_failure_raises_error(), test_osrm_mocked_success()
+Cohesion: 0.21
+Nodes (5): calculate_route(), OSRMRouteEngine, RoutingError, test_osrm_mocked_failure_raises_error(), test_osrm_mocked_success()
 
 ### Community 23 - "colors.dart"
 Cohesion: 0.10
 Nodes (19): accent, accentMuted, AppColors, background, border, borderSubtle, emergency, emergencyBg (+11 more)
 
 ### Community 24 - "main.py"
-Cohesion: 0.15
-Nodes (3): lifespan(), create_default_route_engine(), test_esp32_telemetry_flow()
+Cohesion: 0.13
+Nodes (7): ambulance_ui_redirect(), app_ui_redirect(), health(), lifespan(), root(), status(), create_default_route_engine()
 
 ### Community 25 - "camera.py"
-Cohesion: 0.10
-Nodes (15): CameraAccessRequest, CameraConfigRequest, CameraSourceRequest, detect_image_format(), FrameResponse, get_camera_preview(), get_camera_telemetry(), LaneDetectionResult (+7 more)
+Cohesion: 0.11
+Nodes (14): CameraAccessRequest, CameraConfigRequest, CameraSourceRequest, detect_image_format(), FrameResponse, get_camera_preview(), get_camera_telemetry(), LaneDetectionResult (+6 more)
 
 ### Community 26 - "win32_window.cpp"
 Cohesion: 0.16
 Nodes (6): EnableNonClientDpiScaling, Scale(), Win32Window::Win32Window(), WindowClassRegistrar, class_registered_, instance_
 
-### Community 27 - "get"
-Cohesion: 0.22
-Nodes (5): ambulance_ui_redirect(), app_ui_redirect(), health(), root(), status()
+### Community 27 - "road_service.py"
+Cohesion: 0.13
+Nodes (4): _add_to_mem_cache(), _get_fallback_tile(), get_map_tile(), map_proxy_status()
 
 ### Community 28 - "FlutterWindow"
 Cohesion: 0.12
 Nodes (4): FlutterWindow, flutter_controller_, FlutterWindow::FlutterWindow(), project_
-
-### Community 29 - "train_lane_model.py"
-Cohesion: 0.16
-Nodes (3): LaneFeatureNet, generate_synthetic_dataset(), train_and_export()
 
 ### Community 30 - "Tool Orchestration"
 Cohesion: 0.06
@@ -268,8 +278,8 @@ Cohesion: 0.12
 Nodes (12): AlertFeedbackService, dispose, _hasVibrator, init, _instance, _isActive, startAlert, stopAlert (+4 more)
 
 ### Community 33 - "route_engine.py"
-Cohesion: 0.11
-Nodes (10): start_journey(), stop_journey(), get_journey_service(), filter_by_distance(), StopJourneyRequest, bearing_deg(), haversine_distance_m(), normalize_heading() (+2 more)
+Cohesion: 0.16
+Nodes (4): filter_by_distance(), bearing_deg(), haversine_distance_m(), normalize_heading()
 
 ### Community 34 - "settings_screen.dart"
 Cohesion: 0.12
@@ -292,7 +302,7 @@ Cohesion: 0.08
 Nodes (25): Context Budgeting, Context Hygiene Rules, Context Management, Context Structure (by Task Size), Cross-session continuity, Don't pass:, Large task (full codebase, 200K–1M tokens), Long Session Management (+17 more)
 
 ### Community 39 - "ambulance.js"
-Cohesion: 0.38
+Cohesion: 0.33
 Nodes (10): connectWs(), fmt(), sendTelemetry(), setConn(), setGps(), show(), startGps(), stopGps() (+2 more)
 
 ### Community 40 - "m"
@@ -315,9 +325,9 @@ Nodes (4): Win32Window, child_content_, quit_on_close_, window_handle_
 Cohesion: 0.17
 Nodes (3): get_vehicle_tracker(), TemporalLaneTracker, test_temporal_lane_tracker()
 
-### Community 45 - "test_phone_camera_road_service.py"
-Cohesion: 0.11
-Nodes (6): get_road_service(), RoadAttributes, RoadService, test_road_service_fusion_camera_only_when_map_missing(), test_road_service_fusion_map_and_camera(), test_road_service_fusion_unknown_when_visibility_insufficient()
+### Community 45 - "RoadService"
+Cohesion: 0.12
+Nodes (5): RoadAttributes, RoadService, test_road_service_fusion_camera_only_when_map_missing(), test_road_service_fusion_map_and_camera(), test_road_service_fusion_unknown_when_visibility_insufficient()
 
 ### Community 46 - "telemetry_card.dart"
 Cohesion: 0.20
@@ -363,9 +373,21 @@ Nodes (7): analyzer, errors, exclude, deprecated_member_use, include, linter, ru
 Cohesion: 0.29
 Nodes (7): Jt(), Le(), O(), Qt(), Re(), $t(), te()
 
+### Community 59 - "get_device_service"
+Cohesion: 0.18
+Nodes (7): get_ambulance_config(), get_device(), list_devices(), register_device(), update_ambulance_config(), get_device_service(), test_device_registration_role_protection()
+
 ### Community 60 - "Agent: General"
 Cohesion: 0.10
 Nodes (20): Agent: General, Always run the full chain for the language, Before Writing Any Code, Cite verbatim, Code Standards, Compare to baseline, Don't over-engineer, Execution Protocol (+12 more)
+
+### Community 61 - "logging"
+Cohesion: 0.15
+Nodes (4): list_demo_scenarios(), get_matching_engine(), _parse_lane(), create_default_matching_engine()
+
+### Community 62 - "test_step4_validation.py"
+Cohesion: 0.24
+Nodes (6): AmbulanceTelemetry, VehicleTelemetry, test_ambulance_telemetry_coordinate_out_of_range(), test_ambulance_telemetry_invalid_speed_and_heading(), test_ambulance_telemetry_valid(), test_vehicle_telemetry_validation()
 
 ### Community 63 - "StatelessWidget"
 Cohesion: 0.33
@@ -386,6 +408,10 @@ Nodes (3): Point, x, y
 ### Community 68 - "Size"
 Cohesion: 0.50
 Nodes (3): Size, height, width
+
+### Community 69 - "journey.py"
+Cohesion: 0.13
+Nodes (9): get_active_journey(), get_app_config(), _get_local_ip(), start_journey(), stop_journey(), dispatch_alerts_and_fleet(), get_journey_service(), StopJourneyRequest (+1 more)
 
 ### Community 70 - "Agent: Verify"
 Cohesion: 0.10
@@ -463,15 +489,35 @@ Nodes (7): Gravitas -- Adaptive Reasoning Reference, Reasoning by Scenario, Reas
 Cohesion: 0.25
 Nodes (7): Dependency-Directed Recon, Extended Recon (unfamiliar codebase or high fan-out), Gravitas -- Reconnaissance Reference, Recon Completeness Check, Recon Principle, Standard Recon (Tier 1 tasks), What Not to Do
 
+### Community 101 - "test_phone_camera_road_service.py"
+Cohesion: 0.28
+Nodes (3): process_frame(), get_road_service(), test_direct_process_frame_with_map_fusion()
+
+### Community 102 - "test_final_audit_suite.py"
+Cohesion: 0.17
+Nodes (5): list_demo_scenarios(), test_criterion_10_unauthorized_priority_request(), test_criterion_11_websocket_telemetry_exchange(), test_criterion_15_complete_production_integration(), test_criterion_3_ml_inference_on_real_image()
+
+### Community 105 - "ambulance.py"
+Cohesion: 0.24
+Nodes (3): ambulance_websocket(), _handle_telemetry(), _serialize_state()
+
+### Community 109 - "get_ws_manager"
+Cohesion: 0.11
+Nodes (10): clean_singletons(), _create_sample_road_frame(), test_neural_lane_inference(), clean_manager(), test_vehicle_ws_and_alert_dispatch(), test_vehicle_ws_malformed_resilience(), _create_sample_image(), test_camera_reception() (+2 more)
+
+### Community 111 - "DeviceRole"
+Cohesion: 0.25
+Nodes (3): DeviceRegisterRequest, DeviceRole, test_ambulance_role_isolation()
+
 ## Knowledge Gaps
 - **201 isolated node(s):** `AppColors`, `background`, `surface`, `surfaceElevated`, `accent` (+196 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 964 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **20 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 974 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **25 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `AmbulanceState` connect `time` to `route_engine.py`, `json`, `WebSocketManager`, `demo_fixtures.py`, `RouteEngine`, `models.py`, `test_final_audit_suite.py`, `JunctionService`, `get_ws_manager`?**
+- **Why does `get_ws_manager()` connect `get_ws_manager` to `test_step8_lane_detection.py`, `test_phone_camera_road_service.py`, `journey.py`, `WebSocketManager`, `load_deterministic_scenario`, `ambulance.py`, `RouteEngine`, `VehicleCameraManager`, `get_ws_manager`, `test_evas_full_integration.py`, `main.py`, `camera.py`, `logging`?**
   _High betweenness centrality (0.013) - this node is a cross-community bridge._
 - **Are the 10 inferred relationships involving `AmbulanceState` (e.g. with `_serialize_state()` and `trigger_manual_priority()`) actually correct?**
   _`AmbulanceState` has 10 INFERRED edges - model-reasoned connections that need verification._
@@ -479,9 +525,9 @@ _Questions this graph is uniquely positioned to answer:_
   _201 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `app_state.dart` be split into smaller, more focused modules?**
   _Cohesion score 0.04081632653061224 - nodes in this community are weakly interconnected._
-- **Why does `get_ws_manager()` connect `get_ws_manager` to `route_engine.py`, `json`, `test_step8_lane_detection.py`, `WebSocketManager`, `demo_fixtures.py`, `RouteEngine`, `test_phone_camera_road_service.py`, `VehicleCameraManager`, `models.py`, `main.py`, `camera.py`, `get`?**
-  _High betweenness centrality (0.012) - this node is a cross-community bridge._
+- **Why does `AmbulanceState` connect `time` to `route_engine.py`, `journey.py`, `WebSocketManager`, `.evaluate_eta_and_trigger`, `junction.py`, `ambulance.py`, `load_deterministic_scenario`, `RouteEngine`, `MatchingEngine`, `get_ws_manager`, `test_final_audit_suite.py`, `test_eta_triggered_priority_logic`, `JunctionService`, `logging`, `test_step4_validation.py`?**
+  _High betweenness centrality (0.010) - this node is a cross-community bridge._
 - **Are the 6 inferred relationships involving `VehicleState` (e.g. with `upload_frame()` and `_serialize_state()`) actually correct?**
   _`VehicleState` has 6 INFERRED edges - model-reasoned connections that need verification._
 - **Should `app.js` be split into smaller, more focused modules?**
-  _Cohesion score 0.13570391872278664 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.13642960812772134 - nodes in this community are weakly interconnected._

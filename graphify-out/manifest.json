@@ -54,8 +54,8 @@
     "semantic_hash": "5ba66ac172a7ca55b0cda1fa75764e04"
   },
   "backend/api/camera.py": {
-    "mtime": 1793537455.1799984,
-    "seen": 1793538567.5131059,
+    "mtime": 1793538841.6759875,
+    "seen": 1793624117.276062,
     "ast_hash": "dae80c464ce9223bce2c46ad603fca67",
     "semantic_hash": ""
   },
@@ -72,10 +72,10 @@
     "semantic_hash": "f25f31656550331c7e385ab4cfc27648"
   },
   "backend/api/journey.py": {
-    "mtime": 1793199367.042454,
-    "seen": 1793201088.6341343,
-    "ast_hash": "d30d2908849d1dad7a9ac7237a7b867f",
-    "semantic_hash": "d30d2908849d1dad7a9ac7237a7b867f"
+    "mtime": 1793624152.5407956,
+    "seen": 1793625621.9870403,
+    "ast_hash": "ad3fa3cb58aea1fad38a809b8a40f99f",
+    "semantic_hash": ""
   },
   "backend/api/junction.py": {
     "mtime": 1793194034.8670323,
@@ -90,8 +90,8 @@
     "semantic_hash": "90a05ca12e9c9f3b136e020393b9082b"
   },
   "backend/camera_manager.py": {
-    "mtime": 1793536352.1068554,
-    "seen": 1793538567.5131059,
+    "mtime": 1793538841.9209728,
+    "seen": 1793624117.276062,
     "ast_hash": "5332237e69f33bcd6ebe597dffb8c0e3",
     "semantic_hash": ""
   },
@@ -126,10 +126,10 @@
     "semantic_hash": "ea172648eb85fc8bf5ad0589b8808701"
   },
   "backend/main.py": {
-    "mtime": 1793182911.4486766,
-    "seen": 1793201088.647677,
-    "ast_hash": "8576303b09886923309d422516ee12a5",
-    "semantic_hash": "8576303b09886923309d422516ee12a5"
+    "mtime": 1793623459.5179482,
+    "seen": 1793624117.276062,
+    "ast_hash": "4457c1ce26d4c543ca5d530377ee9f9a",
+    "semantic_hash": ""
   },
   "backend/matching_engine.py": {
     "mtime": 1793183230.1154804,
@@ -240,10 +240,10 @@
     "semantic_hash": "dafe442099eb36dd4b11eec727c5362f"
   },
   "frontend/ambulance/ambulance.js": {
-    "mtime": 1789109273.4188447,
-    "seen": 1793201088.654578,
-    "ast_hash": "598031d3d1db9726f7b763320b94d484",
-    "semantic_hash": "598031d3d1db9726f7b763320b94d484"
+    "mtime": 1793625713.5765347,
+    "seen": 1793626959.3189507,
+    "ast_hash": "e8ede5c9c76998af58e8c0b7c2423355",
+    "semantic_hash": ""
   },
   "frontend/ambulance/manifest.json": {
     "mtime": 1789109282.3718495,
@@ -282,9 +282,9 @@
     "semantic_hash": "a34513cd87cef855195771f6a457a218"
   },
   "frontend/app.js": {
-    "mtime": 1793536882.7097788,
-    "seen": 1793538567.5131059,
-    "ast_hash": "3b33c54b55d834a266d3f0368bc81a7d",
+    "mtime": 1793626867.1083157,
+    "seen": 1793626959.3189507,
+    "ast_hash": "6b2d903e01df23dca548e2ddf8358985",
     "semantic_hash": ""
   },
   "frontend/ios/RunnerTests/RunnerTests.swift": {
@@ -597,14 +597,14 @@
     "semantic_hash": ""
   },
   "backend/road_service.py": {
-    "mtime": 1793537743.1023426,
-    "seen": 1793538567.5131059,
+    "mtime": 1793538842.1275184,
+    "seen": 1793624117.276062,
     "ast_hash": "a5c8f2cf2fd5722d4412eebc7632988f",
     "semantic_hash": ""
   },
   "backend/test_phone_camera_road_service.py": {
-    "mtime": 1793537987.4773371,
-    "seen": 1793538567.5131059,
+    "mtime": 1793538842.2121787,
+    "seen": 1793624117.276062,
     "ast_hash": "a70484600b7ee19a1aca60575fabd23a",
     "semantic_hash": ""
   },
@@ -789,15 +789,15 @@
     "semantic_hash": ""
   },
   "frontend/ambulance/index.html": {
-    "mtime": 1789107176.8111985,
-    "seen": 1793538567.5161092,
-    "ast_hash": "73762ad3cf04f38839e65e06b630b964",
+    "mtime": 1793624976.72299,
+    "seen": 1793625621.9870403,
+    "ast_hash": "6c19cb5056b4f3419356aade30d2cccc",
     "semantic_hash": ""
   },
   "frontend/index.html": {
-    "mtime": 1793536509.3056695,
-    "seen": 1793538567.5161092,
-    "ast_hash": "c01663c963cad8bba41e23dc1d7e4930",
+    "mtime": 1793626880.07262,
+    "seen": 1793626959.3189507,
+    "ast_hash": "792aa6c06f94e246c476713334d99ad8",
     "semantic_hash": ""
   },
   "frontend/ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md": {
@@ -1098,6 +1098,12 @@
     "mtime": 1792671520.8601737,
     "seen": 1793538567.5180182,
     "ast_hash": "301a7604d45b3e739efc881eb04896ea",
+    "semantic_hash": ""
+  },
+  "backend/api/map.py": {
+    "mtime": 1793625713.3319833,
+    "seen": 1793626959.3189507,
+    "ast_hash": "580d711abb9c8090443571b970d80390",
     "semantic_hash": ""
   }
 }
